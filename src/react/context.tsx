@@ -10,10 +10,11 @@ export interface BiomboProviderProps {
     manager?: Manager;
     options?: ManagerOptions;
     listenEscape?: boolean;
+    trackViewport?: boolean;
     children?: ReactNode;
 }
 
-export function BiomboProvider({ manager, options, listenEscape = true, children }: BiomboProviderProps) {
+export function BiomboProvider({ manager, options, listenEscape = true, trackViewport = true, children }: BiomboProviderProps) {
     const [own] = useState(() => manager ?? createManager(options));
     const value = manager ?? own;
 
@@ -23,6 +24,26 @@ export function BiomboProvider({ manager, options, listenEscape = true, children
         }
         return value.escape.attach(window);
     }, [value, listenEscape]);
+
+    useIsomorphicLayoutEffect(() => {
+        if (!trackViewport || typeof window === 'undefined') {
+            return undefined;
+        }
+        let frame = 0;
+        const measure = (): void => {
+            value.setViewport({ width: window.innerWidth, height: window.innerHeight });
+        };
+        const onResize = (): void => {
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(measure);
+        };
+        measure();
+        window.addEventListener('resize', onResize);
+        return () => {
+            cancelAnimationFrame(frame);
+            window.removeEventListener('resize', onResize);
+        };
+    }, [value, trackViewport]);
 
     return <BiomboContext.Provider value={value}>{children}</BiomboContext.Provider>;
 }

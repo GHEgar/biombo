@@ -1,13 +1,16 @@
-import { useCallback, useMemo, useSyncExternalStore, type CSSProperties, type PointerEvent } from 'react';
+import { useCallback, useMemo, useRef, useSyncExternalStore, type CSSProperties, type PointerEvent, type RefCallback } from 'react';
 import { DEFAULT_GROUP } from '../core/manager.js';
-import type { Edge, Focusable, PanelConfig, PanelState, Rect } from '../core/types.js';
+import type { Edge, Focusable, PanelConfig, PanelState, Rect, ResizeDirection, UpdateOptions } from '../core/types.js';
 import { useIsomorphicLayoutEffect, useManager } from './context.js';
+import { startDrag, startResize, type InteractionContext } from './interactions.js';
 
 export interface WindowProps {
+    ref: RefCallback<HTMLElement>;
     'data-biombo-panel': string;
     'data-state': 'open' | 'closed' | 'minimized';
     'data-topmost'?: '';
     'data-dock'?: Edge;
+    'data-maximized'?: '';
     role: 'dialog';
     'aria-modal'?: true;
     hidden?: true;
@@ -20,6 +23,21 @@ export interface WindowPropsInput {
     onPointerDownCapture?: (event: PointerEvent<HTMLElement>) => void;
 }
 
+export interface HandleProps {
+    'data-biombo-handle': '';
+    style: CSSProperties;
+    onPointerDown: (event: PointerEvent<HTMLElement>) => void;
+}
+
+export interface ResizerProps {
+    'data-biombo-resizer': string;
+    role: 'separator';
+    'aria-orientation'?: 'horizontal' | 'vertical';
+    'aria-valuenow'?: number;
+    style: CSSProperties;
+    onPointerDown: (event: PointerEvent<HTMLElement>) => void;
+}
+
 export interface PanelActions {
     open: (trigger?: Focusable | null) => void;
     close: () => void;
@@ -28,14 +46,18 @@ export interface PanelActions {
     minimize: (value?: boolean) => void;
     maximize: (value?: boolean) => void;
     dock: (edge: Edge | null) => void;
-    setDockSize: (size: number | null) => void;
-    setRect: (rect: Rect | null) => void;
+    setDockSize: (size: number | null, options?: UpdateOptions) => void;
+    setRect: (rect: Rect | null, options?: UpdateOptions) => void;
 }
 
 export interface UsePanelResult extends PanelActions {
     state: PanelState;
     getWindowProps: (input?: WindowPropsInput) => WindowProps;
+    getHandleProps: () => HandleProps;
+    getResizerProps: (direction?: ResizeDirection) => ResizerProps;
 }
+
+const TOUCH_NONE: CSSProperties = { touchAction: 'none' };
 
 function activeElement(): Focusable | null {
     if (typeof document === 'undefined') {
@@ -61,12 +83,33 @@ function fallbackState(id: string, config: PanelConfig): PanelState {
         active: false,
         topmost: false,
         zIndex: 0,
+        layout: null,
+        tabbed: false,
+    };
+}
+
+function positionStyle(state: PanelState): CSSProperties {
+    const { layout } = state;
+    if (!state.visible) {
+        return { display: 'none', zIndex: state.zIndex };
+    }
+    if (!layout) {
+        return { zIndex: state.zIndex };
+    }
+    return {
+        position: 'fixed',
+        left: layout.x,
+        top: layout.y,
+        width: layout.width,
+        height: layout.height,
+        zIndex: state.zIndex,
     };
 }
 
 export function usePanel(id: string, config: PanelConfig = {}): UsePanelResult {
     const manager = useManager();
     const key = JSON.stringify(config);
+    const elementRef = useRef<HTMLElement | null>(null);
 
     useIsomorphicLayoutEffect(() => manager.register(id, JSON.parse(key) as PanelConfig), [manager, id, key]);
 
@@ -74,6 +117,16 @@ export function usePanel(id: string, config: PanelConfig = {}): UsePanelResult {
     const panel = useSyncExternalStore(manager.subscribe, getSnapshot, getSnapshot);
     const fallback = useMemo(() => fallbackState(id, JSON.parse(key) as PanelConfig), [id, key]);
     const state = panel ?? fallback;
+
+    const context = useMemo<InteractionContext>(() => ({
+        manager,
+        id,
+        getElement: () => elementRef.current,
+    }), [manager, id]);
+
+    const setElement = useCallback<RefCallback<HTMLElement>>((element) => {
+        elementRef.current = element;
+    }, []);
 
     const actions = useMemo<PanelActions>(() => ({
         open: (trigger) => manager.open(id, trigger === undefined ? activeElement() : trigger),
@@ -83,16 +136,17 @@ export function usePanel(id: string, config: PanelConfig = {}): UsePanelResult {
         minimize: (value) => manager.minimize(id, value),
         maximize: (value) => manager.maximize(id, value),
         dock: (edge) => manager.dock(id, edge),
-        setDockSize: (size) => manager.setDockSize(id, size),
-        setRect: (rect) => manager.setRect(id, rect),
+        setDockSize: (size, options) => manager.setDockSize(id, size, options),
+        setRect: (rect, options) => manager.setRect(id, rect, options),
     }), [manager, id]);
 
     const getWindowProps = useCallback((input: WindowPropsInput = {}): WindowProps => {
         const props: WindowProps = {
+            ref: setElement,
             'data-biombo-panel': id,
             'data-state': !state.open ? 'closed' : state.minimized ? 'minimized' : 'open',
             role: 'dialog',
-            style: { ...input.style, zIndex: state.zIndex },
+            style: { ...input.style, ...positionStyle(state) },
             onPointerDownCapture: (event) => {
                 input.onPointerDownCapture?.(event);
                 manager.focus(id);
@@ -101,8 +155,11 @@ export function usePanel(id: string, config: PanelConfig = {}): UsePanelResult {
         if (state.topmost) {
             props['data-topmost'] = '';
         }
-        if (state.dock) {
+        if (state.dock && !state.maximized) {
             props['data-dock'] = state.dock;
+        }
+        if (state.maximized) {
+            props['data-maximized'] = '';
         }
         if (state.band === 'modal') {
             props['aria-modal'] = true;
@@ -111,7 +168,28 @@ export function usePanel(id: string, config: PanelConfig = {}): UsePanelResult {
             props.hidden = true;
         }
         return props;
-    }, [manager, id, state]);
+    }, [manager, id, state, setElement]);
 
-    return { state, getWindowProps, ...actions };
+    const getHandleProps = useCallback((): HandleProps => ({
+        'data-biombo-handle': '',
+        style: TOUCH_NONE,
+        onPointerDown: (event) => startDrag(context, event),
+    }), [context]);
+
+    const getResizerProps = useCallback((direction?: ResizeDirection): ResizerProps => {
+        const props: ResizerProps = {
+            'data-biombo-resizer': direction ?? state.dock ?? 'dock',
+            role: 'separator',
+            style: TOUCH_NONE,
+            onPointerDown: (event) => startResize(context, event, direction),
+        };
+        if (state.dock && state.layout && !direction) {
+            const vertical = state.dock === 'top' || state.dock === 'bottom';
+            props['aria-orientation'] = vertical ? 'horizontal' : 'vertical';
+            props['aria-valuenow'] = Math.round(vertical ? state.layout.height : state.layout.width);
+        }
+        return props;
+    }, [context, state]);
+
+    return { state, getWindowProps, getHandleProps, getResizerProps, ...actions };
 }

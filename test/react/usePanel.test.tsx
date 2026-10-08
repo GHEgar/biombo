@@ -36,6 +36,7 @@ describe('usePanel', () => {
         const manager = createManager();
         setup(manager, <><Panel id="a" /><Panel id="b" /></>);
         expect(screen.getByTestId('a').hidden).toBe(true);
+        expect(screen.getByTestId('a').style.display).toBe('none');
         fireEvent.click(screen.getByText('toggle a'));
         fireEvent.click(screen.getByText('toggle b'));
         const a = screen.getByTestId('a');

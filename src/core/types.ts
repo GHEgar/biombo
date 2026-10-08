@@ -6,6 +6,22 @@ export type DockPolicy = 'replace' | 'stack' | 'tabs';
 
 export type CompactMode = 'sheet' | 'fullscreen' | 'inline';
 
+export type SnapMode = 'auto' | 'button' | 'both';
+
+export type ResizeDirection = 'n' | 'e' | 's' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
+
+export interface Size {
+    width: number;
+    height: number;
+}
+
+export interface Area {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+}
+
 export interface Rect {
     x: number;
     y: number;
@@ -27,6 +43,12 @@ export interface PanelConfig {
     compact?: CompactMode;
     persist?: boolean;
     initial?: Partial<PersistedPanel>;
+    defaultSize?: Size;
+    minSize?: Size;
+    minDockSize?: number;
+    maxDockRatio?: number;
+    snap?: SnapMode;
+    undockOnDrag?: boolean | number;
 }
 
 export interface PersistedPanel {
@@ -46,12 +68,34 @@ export interface PanelState extends PersistedPanel {
     active: boolean;
     topmost: boolean;
     zIndex: number;
+    layout: Rect | null;
+    tabbed: boolean;
+}
+
+export interface EdgeState {
+    policy: DockPolicy;
+    ids: readonly string[];
+    active: string | null;
+}
+
+export interface SnapPreview {
+    id: string;
+    edge: Edge;
+    rect: Rect;
 }
 
 export interface Snapshot {
     panels: Readonly<Record<string, PanelState>>;
     order: readonly string[];
     active: Readonly<Record<string, string | null>>;
+    viewport: Size;
+    area: Area;
+    edges: Readonly<Record<Edge, EdgeState>>;
+    snap: SnapPreview | null;
+}
+
+export interface UpdateOptions {
+    transient?: boolean;
 }
 
 export type PanelEventType =
@@ -80,6 +124,10 @@ export interface GroupConfig {
     mode: GroupMode;
 }
 
+export interface EdgeConfig {
+    policy: DockPolicy;
+}
+
 export interface StorageAdapter {
     get: (key: string) => string | null;
     set: (key: string, value: string) => void;
@@ -101,4 +149,11 @@ export interface ManagerOptions {
     groups?: Readonly<Record<string, GroupConfig>>;
     persist?: PersistOptions;
     onEvent?: (event: PanelEvent) => void;
+    onAreaChange?: (area: Area) => void;
+    edges?: Readonly<Partial<Record<Edge, EdgeConfig>>>;
+    dockedBand?: string;
+    defaultDockRatio?: number;
+    snapThreshold?: number;
+    keepVisible?: Size;
+    cascade?: number;
 }

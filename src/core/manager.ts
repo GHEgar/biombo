@@ -1,28 +1,10 @@
-import { createEscapeStack, ESCAPE_PRIORITY, type EscapeStack } from './escape.js';
-import { DEFAULT_PERSIST_FIELDS, pickPersisted, readPersisted, writePersisted } from './persistence.js';
-import { buildSnapshot, isPanelVisible, type PanelRecord, type SnapshotInput } from './snapshot.js';
-import type {
-    Edge,
-    Focusable,
-    GroupMode,
-    ManagerOptions,
-    PanelConfig,
-    PanelEvent,
-    PanelState,
-    PersistedPanel,
-    Rect,
-    Snapshot,
-} from './types.js';
+import { ESCAPE_PRIORITY, type EscapeStack } from './escape.js';
+import { createGeometryActions, placeOnOpen, type GeometryActions } from './geometry.js';
+import type { PanelRecord } from './snapshot.js';
+import { createStore, DEFAULT_BANDS, DEFAULT_GROUP } from './store.js';
+import type { Focusable, ManagerOptions, PanelConfig, PanelEvent, PanelState, PersistedPanel, Snapshot } from './types.js';
 
-export const DEFAULT_BANDS: Readonly<Record<string, number>> = {
-    overlay: 5,
-    docked: 20,
-    floating: 30,
-    menu: 50,
-    modal: 60,
-};
-
-export const DEFAULT_GROUP = 'default';
+export { DEFAULT_BANDS, DEFAULT_GROUP };
 
 const CLOSED: PersistedPanel = {
     open: false,
@@ -33,10 +15,11 @@ const CLOSED: PersistedPanel = {
     rect: null,
 };
 
-export interface Manager {
+export interface Manager extends GeometryActions {
     register: (id: string, config?: PanelConfig) => () => void;
     getSnapshot: () => Snapshot;
     getPanel: (id: string) => PanelState | null;
+    getConfig: (id: string) => PanelConfig | null;
     subscribe: (listener: () => void) => () => void;
     open: (id: string, trigger?: Focusable | null) => void;
     close: (id: string) => void;
@@ -44,132 +27,54 @@ export interface Manager {
     focus: (id: string) => void;
     minimize: (id: string, value?: boolean) => void;
     maximize: (id: string, value?: boolean) => void;
-    dock: (id: string, edge: Edge | null) => void;
-    setDockSize: (id: string, size: number | null) => void;
-    setRect: (id: string, rect: Rect | null) => void;
     escape: EscapeStack;
 }
 
-const EMPTY: Snapshot = { panels: {}, order: [], active: {} };
-
 export function createManager(options: ManagerOptions = {}): Manager {
-    const bands = options.bands ?? DEFAULT_BANDS;
-    const defaultBand = options.defaultBand ?? 'floating';
-    const records = new Map<string, PanelRecord>();
-    const listeners = new Set<() => void>();
-    const escape = createEscapeStack();
-    const persist = options.persist;
-    const fields = persist?.fields ?? DEFAULT_PERSIST_FIELDS;
-    const stored = persist ? { ...readPersisted(persist) } : {};
-    let order: string[] = [];
-    let active: Record<string, string | null> = {};
-    let snapshot: Snapshot = EMPTY;
-
-    const groupMode = (group: string): GroupMode => options.groups?.[group]?.mode ?? 'free';
-
-    const input = (): SnapshotInput => ({ records, order, active, bands, groupMode });
-
-    const isVisible = (id: string): boolean => isPanelVisible(input(), id);
-
-    const save = (): void => {
-        if (!persist) {
-            return;
-        }
-        for (const [id, record] of records) {
-            if (record.config.persist !== false) {
-                stored[id] = pickPersisted(record.state, fields);
-            }
-        }
-        writePersisted(persist, stored);
-    };
-
-    const commit = (events: PanelEvent[] = []): void => {
-        snapshot = buildSnapshot(input());
-        save();
-        for (const listener of listeners) {
-            listener();
-        }
-        for (const event of events) {
-            options.onEvent?.(event);
-        }
-    };
-
-    const event = (record: PanelRecord, id: string, type: PanelEvent['type'], extra: Partial<PanelEvent> = {}): PanelEvent => ({
-        type,
-        id,
-        group: record.group,
-        ...extra,
-    });
-
-    const lastOpenInGroup = (group: string, except: string): string | null => {
-        for (let i = order.length - 1; i >= 0; i -= 1) {
-            const id = order[i];
-            const record = id ? records.get(id) : undefined;
-            if (id && id !== except && record?.group === group && record.state.open) {
-                return id;
-            }
-        }
-        return null;
-    };
-
-    const bringToFront = (id: string, record: PanelRecord): boolean => {
-        const changed = order[order.length - 1] !== id || active[record.group] !== id;
-        order = [...order.filter((other) => other !== id), id];
-        if (groupMode(record.group) === 'single' || record.state.open) {
-            active = { ...active, [record.group]: id };
-        }
-        escape.raise(id);
-        return changed;
-    };
-
-    const update = (id: string, patch: Partial<PersistedPanel>): PanelRecord | null => {
-        const record = records.get(id);
-        if (!record) {
-            return null;
-        }
-        record.state = { ...record.state, ...patch };
-        return record;
-    };
+    const store = createStore(options);
+    const geometry = createGeometryActions(store);
+    const { records } = store;
 
     const register = (id: string, config: PanelConfig = {}): (() => void) => {
         const previous = records.get(id);
         previous?.releaseEscape?.();
-        const persisted = config.persist === false ? {} : stored[id] ?? {};
+        const persisted = config.persist === false ? {} : store.stored[id] ?? {};
         const record: PanelRecord = {
             config,
             group: config.group ?? DEFAULT_GROUP,
-            band: config.band ?? defaultBand,
+            band: config.band ?? options.defaultBand ?? 'floating',
             state: previous?.state ?? { ...CLOSED, ...config.initial, ...persisted },
             trigger: previous?.trigger ?? null,
             releaseEscape: null,
+            dockSeq: previous?.dockSeq ?? (store.seq += 1),
         };
         if (config.closeOnEscape !== false) {
-            record.releaseEscape = escape.push({
+            record.releaseEscape = store.escape.push({
                 id,
                 priority: config.escapePriority ?? ESCAPE_PRIORITY.surface,
-                enabled: () => isVisible(id),
+                enabled: () => store.snapshot.panels[id]?.visible ?? false,
                 onEscape: () => close(id),
             });
         }
         records.set(id, record);
-        if (!order.includes(id)) {
-            order = [...order, id];
+        if (!store.order.includes(id)) {
+            store.order = [...store.order, id];
         }
-        if (record.state.open && !active[record.group]) {
-            active = { ...active, [record.group]: id };
+        if (record.state.open && !store.active[record.group]) {
+            store.active = { ...store.active, [record.group]: id };
         }
-        commit();
+        store.commit();
         return () => {
             if (records.get(id) !== record) {
                 return;
             }
             record.releaseEscape?.();
             records.delete(id);
-            order = order.filter((other) => other !== id);
-            if (active[record.group] === id) {
-                active = { ...active, [record.group]: lastOpenInGroup(record.group, id) };
+            store.order = store.order.filter((other) => other !== id);
+            if (store.active[record.group] === id) {
+                store.active = { ...store.active, [record.group]: store.lastOpenInGroup(record.group, id) };
             }
-            commit();
+            store.commit();
         };
     };
 
@@ -183,15 +88,18 @@ export function createManager(options: ManagerOptions = {}): Manager {
         if (trigger) {
             record.trigger = trigger;
         }
-        update(id, { open: true, minimized: false });
-        bringToFront(id, record);
+        if (!wasOpen) {
+            placeOnOpen(store, record);
+        }
+        store.update(id, { open: true, minimized: false });
+        store.bringToFront(id, record);
         const events: PanelEvent[] = [];
         if (!wasOpen) {
-            events.push(event(record, id, 'open'));
+            events.push(store.event(record, id, 'open'));
         } else if (wasMinimized) {
-            events.push(event(record, id, 'restore'));
+            events.push(store.event(record, id, 'restore'));
         }
-        commit(events);
+        store.commit(events);
     };
 
     const close = (id: string): void => {
@@ -199,18 +107,18 @@ export function createManager(options: ManagerOptions = {}): Manager {
         if (!record || !record.state.open) {
             return;
         }
-        update(id, { open: false, minimized: false, maximized: false });
-        if (active[record.group] === id) {
-            active = { ...active, [record.group]: lastOpenInGroup(record.group, id) };
+        store.update(id, { open: false, minimized: false, maximized: false });
+        if (store.active[record.group] === id) {
+            store.active = { ...store.active, [record.group]: store.lastOpenInGroup(record.group, id) };
         }
         const trigger = record.trigger;
         record.trigger = null;
-        commit([event(record, id, 'close')]);
+        store.commit([store.event(record, id, 'close')]);
         trigger?.focus();
     };
 
     const toggle = (id: string, trigger: Focusable | null = null): void => {
-        if (isVisible(id)) {
+        if (store.snapshot.panels[id]?.visible) {
             close(id);
         } else {
             open(id, trigger);
@@ -222,9 +130,9 @@ export function createManager(options: ManagerOptions = {}): Manager {
         if (!record || !record.state.open) {
             return;
         }
-        const wasVisible = isVisible(id);
-        if (bringToFront(id, record) || !wasVisible) {
-            commit([event(record, id, 'focus')]);
+        const wasVisible = store.snapshot.panels[id]?.visible ?? false;
+        if (store.bringToFront(id, record) || !wasVisible) {
+            store.commit([store.event(record, id, 'focus')]);
         }
     };
 
@@ -233,11 +141,11 @@ export function createManager(options: ManagerOptions = {}): Manager {
         if (!record || !record.state.open || record.state.minimized === value || record.config.minimizable === false) {
             return;
         }
-        update(id, { minimized: value });
+        store.update(id, { minimized: value });
         if (!value) {
-            bringToFront(id, record);
+            store.bringToFront(id, record);
         }
-        commit([event(record, id, value ? 'minimize' : 'restore')]);
+        store.commit([store.event(record, id, value ? 'minimize' : 'restore')]);
     };
 
     const maximize = (id: string, value = true): void => {
@@ -245,48 +153,19 @@ export function createManager(options: ManagerOptions = {}): Manager {
         if (!record || !record.state.open || record.state.maximized === value) {
             return;
         }
-        update(id, { maximized: value });
-        commit([event(record, id, value ? 'maximize' : 'unmaximize')]);
-    };
-
-    const dock = (id: string, edge: Edge | null): void => {
-        const record = records.get(id);
-        if (!record || record.state.dock === edge) {
-            return;
-        }
-        const allowed = record.config.dockable;
-        if (edge && allowed && !allowed.includes(edge)) {
-            return;
-        }
-        update(id, { dock: edge });
-        commit([event(record, id, edge ? 'dock' : 'undock', { dock: edge })]);
-    };
-
-    const setDockSize = (id: string, size: number | null): void => {
-        const record = records.get(id);
-        if (!record || record.state.dockSize === size) {
-            return;
-        }
-        update(id, { dockSize: size });
-        commit([event(record, id, 'resize', { size })]);
-    };
-
-    const setRect = (id: string, rect: Rect | null): void => {
-        const record = records.get(id);
-        if (!record) {
-            return;
-        }
-        update(id, { rect });
-        commit([event(record, id, 'move', { rect })]);
+        store.update(id, { maximized: value });
+        store.commit([store.event(record, id, value ? 'maximize' : 'unmaximize')]);
     };
 
     return {
+        ...geometry,
         register,
-        getSnapshot: () => snapshot,
-        getPanel: (id) => snapshot.panels[id] ?? null,
+        getSnapshot: () => store.snapshot,
+        getPanel: (id) => store.snapshot.panels[id] ?? null,
+        getConfig: (id) => records.get(id)?.config ?? null,
         subscribe: (listener) => {
-            listeners.add(listener);
-            return () => listeners.delete(listener);
+            store.listeners.add(listener);
+            return () => store.listeners.delete(listener);
         },
         open,
         close,
@@ -294,9 +173,6 @@ export function createManager(options: ManagerOptions = {}): Manager {
         focus,
         minimize,
         maximize,
-        dock,
-        setDockSize,
-        setRect,
-        escape,
+        escape: store.escape,
     };
 }

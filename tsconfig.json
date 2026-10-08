@@ -3,7 +3,11 @@
         "target": "ES2022",
         "module": "ESNext",
         "moduleResolution": "Bundler",
-        "lib": ["ES2022", "DOM", "DOM.Iterable"],
+        "lib": [
+            "ES2022",
+            "DOM",
+            "DOM.Iterable"
+        ],
         "jsx": "react-jsx",
         "strict": true,
         "noUncheckedIndexedAccess": true,
@@ -11,7 +15,21 @@
         "isolatedModules": true,
         "verbatimModuleSyntax": true,
         "skipLibCheck": true,
-        "types": []
+        "types": [],
+        "paths": {
+            "biombo/react": [
+                "./src/react/index.ts"
+            ],
+            "biombo": [
+                "./src/core/index.ts"
+            ]
+        }
     },
-    "include": ["src", "test"]
+    "include": [
+        "src",
+        "test",
+        "demo",
+        "e2e",
+        "playwright.config.ts"
+    ]
 }

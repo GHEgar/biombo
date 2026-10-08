@@ -1,0 +1,149 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font: 14px/1.4 system-ui, sans-serif;
+    background: #eef1f6;
+    color: #1a2133;
+    overflow: hidden;
+}
+
+.map {
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+        linear-gradient(#cfd8e6 1px, transparent 1px) 0 0 / 40px 40px,
+        linear-gradient(90deg, #cfd8e6 1px, transparent 1px) 0 0 / 40px 40px,
+        #e3ebf5;
+    transition: inset 0.15s ease;
+}
+
+.map span {
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 1px 4px #0002;
+}
+
+.toolbar {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 40;
+    display: flex;
+    gap: 6px;
+    padding: 6px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 2px 10px #0002;
+}
+
+button {
+    border: 1px solid #c9d2e3;
+    border-radius: 999px;
+    padding: 4px 12px;
+    background: #fff;
+    cursor: pointer;
+}
+
+button.on {
+    background: #1a2664;
+    color: #fff;
+}
+
+button.pill {
+    background: #ffe6ec;
+    border-color: #ff577d;
+}
+
+button.mode.on {
+    background: #ff577d;
+    color: #fff;
+}
+
+.panel {
+    display: flex;
+    flex-direction: column;
+    background: #f9fbff;
+    border: 1px solid #c9d2e3;
+    border-radius: 12px;
+    box-shadow: 0 6px 24px #1a26641f;
+    overflow: hidden;
+}
+
+.panel[data-dock],
+.panel[data-maximized] {
+    border-radius: 0;
+}
+
+.panel[data-topmost] {
+    border-color: #1a2664;
+}
+
+.panel-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px 6px 12px;
+    background: #fff;
+    border-bottom: 1px solid #e3e8f2;
+    cursor: move;
+}
+
+.panel-bar button {
+    padding: 2px 8px;
+}
+
+.z {
+    color: #7a849b;
+    font-size: 12px;
+}
+
+.spacer {
+    flex: 1;
+}
+
+.panel-body {
+    flex: 1;
+    padding: 12px;
+    overflow: auto;
+}
+
+.snap {
+    position: fixed;
+    z-index: 35;
+    background: #6b4bd833;
+    border: 2px dashed #6b4bd8;
+    pointer-events: none;
+}
+
+.resizer {
+    position: absolute;
+    z-index: 1;
+}
+
+.resizer.n, .resizer.s { left: 8px; right: 8px; height: 8px; cursor: ns-resize; }
+.resizer.e, .resizer.w { top: 8px; bottom: 8px; width: 8px; cursor: ew-resize; }
+.resizer.n { top: -4px; }
+.resizer.s { bottom: -4px; }
+.resizer.e { right: -4px; }
+.resizer.w { left: -4px; }
+.resizer.ne, .resizer.nw, .resizer.se, .resizer.sw { width: 14px; height: 14px; }
+.resizer.ne { top: -4px; right: -4px; cursor: nesw-resize; }
+.resizer.nw { top: -4px; left: -4px; cursor: nwse-resize; }
+.resizer.se { bottom: -4px; right: -4px; cursor: nwse-resize; }
+.resizer.sw { bottom: -4px; left: -4px; cursor: nesw-resize; }
+
+.resizer.dock {
+    background: #1a266414;
+}
+
+.resizer.dock.n { top: 0; left: 0; right: 0; height: 6px; }
+.resizer.dock.s { bottom: 0; left: 0; right: 0; height: 6px; }
+.resizer.dock.e { right: 0; top: 0; bottom: 0; width: 6px; }
+.resizer.dock.w { left: 0; top: 0; bottom: 0; width: 6px; }
