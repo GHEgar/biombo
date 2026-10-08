@@ -1,0 +1,50 @@
+{
+    "name": "biombo",
+    "version": "0.1.0",
+    "description": "Headless panel and window management for React: z-order, focus, Escape stack, docking, minimize and persistence.",
+    "license": "AGPL-3.0-only",
+    "author": "Edgar Villarreal",
+    "type": "module",
+    "sideEffects": false,
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/core/index.d.ts",
+            "import": "./dist/core/index.js"
+        },
+        "./react": {
+            "types": "./dist/react/index.d.ts",
+            "import": "./dist/react/index.js"
+        }
+    },
+    "scripts": {
+        "build": "rm -rf dist && tsc -p tsconfig.build.json",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint .",
+        "test": "vitest run",
+        "test:watch": "vitest"
+    },
+    "peerDependencies": {
+        "react": ">=19"
+    },
+    "peerDependenciesMeta": {
+        "react": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "@testing-library/react": "^16.3.3",
+        "@types/react": "^19.3.0",
+        "eslint": "^10.12.0",
+        "eslint-plugin-react-hooks": "^7.1.1",
+        "happy-dom": "^20.14.5",
+        "react": "^19.3.0",
+        "react-dom": "^19.3.0",
+        "typescript": "~6.0.3",
+        "typescript-eslint": "^8.71.1",
+        "vitest": "^5.0.3"
+    }
+}
