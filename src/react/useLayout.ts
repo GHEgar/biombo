@@ -11,6 +11,7 @@ function useSelect<T>(select: (snapshot: ReturnType<ReturnType<typeof useManager
 const selectArea = (snapshot: { area: Area }): Area => snapshot.area;
 const selectSnap = (snapshot: { snap: SnapPreview | null }): SnapPreview | null => snapshot.snap;
 const selectViewport = (snapshot: { viewport: Size }): Size => snapshot.viewport;
+const selectCompact = (snapshot: { compact: boolean }): boolean => snapshot.compact;
 
 export function useArea(): Area {
     return useSelect(selectArea);
@@ -27,4 +28,8 @@ export function useViewport(): Size {
 export function useEdge(edge: Edge): EdgeState {
     const select = useCallback((snapshot: { edges: Readonly<Record<Edge, EdgeState>> }) => snapshot.edges[edge], [edge]);
     return useSelect(select);
+}
+
+export function useCompact(): boolean {
+    return useSelect(selectCompact);
 }

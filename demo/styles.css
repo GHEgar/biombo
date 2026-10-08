@@ -147,3 +147,44 @@ button.mode.on {
 .resizer.dock.s { bottom: 0; left: 0; right: 0; height: 6px; }
 .resizer.dock.e { right: 0; top: 0; bottom: 0; width: 6px; }
 .resizer.dock.w { left: 0; top: 0; bottom: 0; width: 6px; }
+
+.scale {
+    position: fixed;
+    left: 340px;
+    bottom: 12px;
+    z-index: 15;
+    padding: 2px 10px;
+    border: 2px solid #1a2133;
+    border-top: 0;
+    background: #fff;
+    font-size: 12px;
+}
+
+.pillbar {
+    position: fixed;
+    left: 320px;
+    z-index: 15;
+    display: flex;
+    gap: 6px;
+    transition: bottom 0.15s ease;
+}
+
+.pillbar-empty {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #fff;
+    color: #7a849b;
+    font-size: 12px;
+}
+
+.panel[data-presentation='sheet'] {
+    border-radius: 16px 16px 0 0;
+}
+
+.panel[data-presentation='fullscreen'] {
+    border-radius: 0;
+}
+
+.panel:focus-visible {
+    outline: 3px solid #6b4bd8;
+}

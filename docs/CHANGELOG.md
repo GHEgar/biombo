@@ -28,3 +28,14 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 - Cambios transitorios (`{ transient: true }`) que no persisten ni emiten evento.
 - Hooks `useArea`, `useSnapPreview`, `useEdge` y `useViewport`.
 - Demo en Vite y pruebas e2e con Playwright.
+- Modo compacto (`compactBreakpoint`, 768 por defecto): no hay acople ni área reservada y cada panel
+  se presenta como `sheet`, `fullscreen` o `inline` según su `compact`. Estado `presentation` en cada
+  panel, `snapshot.compact` y hook `useCompact`.
+- Holgura: `clearance()` en el core y los hooks `useClearance` y `useObstacle`; un elemento esquiva
+  los paneles visibles y los obstáculos registrados que tenga cerca de su borde, encadenándolos.
+- F6 y Mayús+F6 recorren los paneles visibles y les dan foco (`manager.cycle`, `cycleKey`).
+
+### Corregido
+
+- Un panel cerrado seguía tapando la página cuando el consumidor le ponía `display`: ahora lleva
+  `display: none` además de `hidden`.

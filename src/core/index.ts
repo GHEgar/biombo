@@ -2,6 +2,7 @@ export { createManager, DEFAULT_BANDS, DEFAULT_GROUP, type Manager } from './man
 export { createEscapeStack, ESCAPE_PRIORITY, type EscapeLayer, type EscapeStack } from './escape.js';
 export { DEFAULT_PERSIST_FIELDS, localStorageAdapter, memoryAdapter } from './persistence.js';
 export { DEFAULT_KEEP_VISIBLE } from './store.js';
+export { clearance, type ClearanceOptions } from './clearance.js';
 export {
     areaRect,
     centerRect,
@@ -32,6 +33,7 @@ export type {
     PersistField,
     PersistOptions,
     PersistedPanel,
+    Presentation,
     Rect,
     ResizeDirection,
     Size,

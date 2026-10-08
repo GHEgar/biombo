@@ -2,6 +2,7 @@ import { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BiomboProvider, localStorageAdapter, useArea, useGlobalMode, useSnapPreview, type PanelConfig } from 'biombo/react';
 import { DemoPanel } from './DemoPanel';
+import { PillBar, Scale } from './PillBar';
 import { Toolbar } from './Toolbar';
 
 export const PANELS: Record<string, { title: string; config: PanelConfig }> = {
@@ -15,7 +16,7 @@ export const PANELS: Record<string, { title: string; config: PanelConfig }> = {
     },
     info: {
         title: 'Info',
-        config: { defaultSize: { width: 320, height: 200 }, minimizable: false },
+        config: { defaultSize: { width: 320, height: 200 }, minimizable: false, compact: 'fullscreen' },
     },
 };
 
@@ -61,6 +62,8 @@ function App() {
                 <DemoPanel key={id} id={id} title={panel.title} config={panel.config} />
             ))}
             <SnapPreview />
+            <Scale />
+            <PillBar titles={Object.fromEntries(Object.entries(PANELS).map(([id, panel]) => [id, panel.title]))} />
         </BiomboProvider>
     );
 }

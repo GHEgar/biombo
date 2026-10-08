@@ -9,6 +9,7 @@ import type {
     PanelConfig,
     PanelState,
     PersistedPanel,
+    Presentation,
     Rect,
     Size,
     Snapshot,
@@ -36,7 +37,26 @@ export interface SnapshotInput {
     defaultDockRatio: number;
     viewport: Size;
     snap: SnapPreview | null;
+    obstacles: Readonly<Record<string, Rect>>;
+    compactBreakpoint: number;
+    sheetRatio: number;
     previous: Snapshot | null;
+}
+
+interface Placement {
+    layout: Rect | null;
+    presentation: Presentation;
+    tabbed: boolean;
+    band: string;
+}
+
+interface PlacementContext {
+    input: SnapshotInput;
+    edges: Record<Edge, EdgeState>;
+    visible: Set<string>;
+    dockRects: Map<string, Rect>;
+    areaRect: Rect | null;
+    compact: boolean;
 }
 
 export const EMPTY_EDGES: Readonly<Record<Edge, EdgeState>> = {
@@ -58,7 +78,8 @@ function samePanel(a: PanelState, b: PanelState): boolean {
     return a.open === b.open && a.minimized === b.minimized && a.maximized === b.maximized
         && a.dock === b.dock && a.dockSize === b.dockSize && sameRect(a.rect, b.rect)
         && a.group === b.group && a.band === b.band && a.visible === b.visible && a.active === b.active
-        && a.topmost === b.topmost && a.zIndex === b.zIndex && sameRect(a.layout, b.layout) && a.tabbed === b.tabbed;
+        && a.topmost === b.topmost && a.zIndex === b.zIndex && sameRect(a.layout, b.layout) && a.tabbed === b.tabbed
+        && a.presentation === b.presentation;
 }
 
 function buildEdges(input: SnapshotInput, visible: Set<string>): Record<Edge, EdgeState> {
@@ -106,14 +127,59 @@ function dockItems(input: SnapshotInput, edges: Record<Edge, EdgeState>, visible
     return items;
 }
 
+function compactPlacement(record: PanelRecord, viewport: Size, sheetRatio: number): Pick<Placement, 'layout' | 'presentation'> {
+    const mode = record.config.compact ?? 'sheet';
+    if (mode === 'inline') {
+        return { layout: null, presentation: 'inline' };
+    }
+    if (mode === 'fullscreen' || record.state.maximized) {
+        return { layout: { x: 0, y: 0, width: viewport.width, height: viewport.height }, presentation: 'fullscreen' };
+    }
+    const height = Math.round(viewport.height * sheetRatio);
+    return { layout: { x: 0, y: viewport.height - height, width: viewport.width, height }, presentation: 'sheet' };
+}
+
+function place(id: string, record: PanelRecord, context: PlacementContext): Placement {
+    const { input, edges, visible, dockRects } = context;
+    if (!visible.has(id)) {
+        return { layout: null, presentation: 'hidden', tabbed: false, band: record.band };
+    }
+    if (context.compact) {
+        return { ...compactPlacement(record, input.viewport, input.sheetRatio), tabbed: false, band: record.band };
+    }
+    const edge = record.state.dock ? edges[record.state.dock] : null;
+    const tabbed = !!edge && edge.policy !== 'stack' && edge.active !== id && !record.state.maximized;
+    if (tabbed) {
+        return { layout: null, presentation: 'hidden', tabbed, band: input.dockedBand };
+    }
+    if (record.state.maximized) {
+        return { layout: context.areaRect, presentation: 'maximized', tabbed, band: record.band };
+    }
+    const dockRect = dockRects.get(id);
+    if (dockRect) {
+        return { layout: dockRect, presentation: 'docked', tabbed, band: input.dockedBand };
+    }
+    return { layout: record.state.dock ? null : record.state.rect, presentation: 'floating', tabbed, band: record.band };
+}
+
 export function buildSnapshot(input: SnapshotInput): Snapshot {
     const visible = new Set(input.order.filter((id) => isPanelVisible(input, id)));
     const edges = buildEdges(input, visible);
     const hasViewport = input.viewport.width > 0 && input.viewport.height > 0;
-    const docked = hasViewport ? layoutDocks(dockItems(input, edges, visible), input.viewport) : { area: ZERO_AREA, rects: new Map<string, Rect>() };
+    const compact = hasViewport && input.viewport.width < input.compactBreakpoint;
+    const docked = hasViewport && !compact
+        ? layoutDocks(dockItems(input, edges, visible), input.viewport)
+        : { area: ZERO_AREA, rects: new Map<string, Rect>() };
     const previousArea = input.previous?.area;
     const area: Area = previousArea && sameArea(previousArea, docked.area) ? previousArea : docked.area;
-    const maximizedRect = hasViewport ? areaRect(area, input.viewport) : null;
+    const context: PlacementContext = {
+        input,
+        edges,
+        visible,
+        dockRects: docked.rects,
+        areaRect: hasViewport ? areaRect(area, input.viewport) : null,
+        compact,
+    };
 
     const panels: Record<string, PanelState> = {};
     const rankByBand = new Map<string, number>();
@@ -124,11 +190,8 @@ export function buildSnapshot(input: SnapshotInput): Snapshot {
         if (!record) {
             continue;
         }
-        const dockRect = docked.rects.get(id) ?? null;
-        const edge = record.state.dock ? edges[record.state.dock] : null;
-        const tabbed = !!edge && edge.policy !== 'stack' && visible.has(id) && edge.active !== id && !record.state.maximized;
-        const shown = visible.has(id) && !tabbed;
-        const band = dockRect ? input.dockedBand : record.band;
+        const { layout, presentation, tabbed, band } = place(id, record, context);
+        const shown = presentation !== 'hidden';
         const rank = rankByBand.get(band) ?? 0;
         if (shown) {
             rankByBand.set(band, rank + 1);
@@ -138,7 +201,6 @@ export function buildSnapshot(input: SnapshotInput): Snapshot {
             topZ = zIndex;
             topmost = id;
         }
-        const layout = record.state.maximized ? maximizedRect : dockRect ?? (record.state.dock ? null : record.state.rect);
         panels[id] = {
             ...record.state,
             id,
@@ -150,6 +212,7 @@ export function buildSnapshot(input: SnapshotInput): Snapshot {
             zIndex,
             layout,
             tabbed,
+            presentation,
         };
     }
     for (const [id, panel] of Object.entries(panels)) {
@@ -165,5 +228,7 @@ export function buildSnapshot(input: SnapshotInput): Snapshot {
         area,
         edges,
         snap: input.snap,
+        compact,
+        obstacles: input.obstacles,
     };
 }

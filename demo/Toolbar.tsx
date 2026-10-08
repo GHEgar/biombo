@@ -9,16 +9,15 @@ export function Toolbar({ panels, mode }: { panels: Record<string, { title: stri
         <nav className="toolbar">
             {Object.entries(panels).map(([id, { title }]) => {
                 const state = snapshot.panels[id];
-                const minimized = state?.open && state.minimized;
                 return (
                     <button
                         key={id}
                         type="button"
                         data-testid={`toggle-${id}`}
-                        className={minimized ? 'pill' : state?.visible ? 'on' : ''}
+                        className={state?.visible ? 'on' : ''}
                         onClick={(event) => manager.toggle(id, event.currentTarget)}
                     >
-                        {minimized ? `${title} ▴` : title}
+                        {title}
                     </button>
                 );
             })}

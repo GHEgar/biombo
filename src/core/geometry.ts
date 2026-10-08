@@ -12,6 +12,7 @@ export interface GeometryActions {
     clampRect: (rect: Rect) => Rect;
     snapAt: (id: string, point: Point) => SnapPreview | null;
     undockAt: (id: string, point: Point, grab: Point) => Rect | null;
+    setObstacle: (key: string, rect: Rect | null) => void;
 }
 
 export interface Point {
@@ -131,7 +132,7 @@ export function createGeometryActions(store: Store): GeometryActions {
 
     const snapAt = (id: string, point: Point): SnapPreview | null => {
         const record = store.records.get(id);
-        if (!record || record.config.snap === 'button' || !hasSize(store.viewport)) {
+        if (!record || record.config.snap === 'button' || !hasSize(store.viewport) || store.snapshot.compact) {
             return null;
         }
         const edge = snapEdge(point, store.viewport, store.options.snapThreshold ?? 48, record.config.dockable ?? []);
@@ -151,7 +152,7 @@ export function createGeometryActions(store: Store): GeometryActions {
     const undockAt = (id: string, point: Point, grab: Point): Rect | null => {
         const record = store.records.get(id);
         const layout = store.snapshot.panels[id]?.layout;
-        if (!record || !record.state.dock || !layout) {
+        if (!record || !record.state.dock || !layout || store.snapshot.compact) {
             return null;
         }
         const previous = record.state.rect;
@@ -172,7 +173,21 @@ export function createGeometryActions(store: Store): GeometryActions {
         return rect;
     };
 
+    const setObstacle = (key: string, rect: Rect | null): void => {
+        const current = store.obstacles[key] ?? null;
+        if (sameRect(current, rect)) {
+            return;
+        }
+        const next = Object.fromEntries(Object.entries(store.obstacles).filter(([other]) => other !== key));
+        if (rect) {
+            next[key] = rect;
+        }
+        store.obstacles = next;
+        store.commit([], { transient: true });
+    };
+
     return {
+        setObstacle,
         dock,
         setDockSize,
         setRect,

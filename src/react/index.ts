@@ -8,6 +8,7 @@ export {
     type WindowProps,
     type WindowPropsInput,
 } from './usePanel.js';
-export { useArea, useEdge, useSnapPreview, useViewport } from './useLayout.js';
+export { useArea, useCompact, useEdge, useSnapPreview, useViewport } from './useLayout.js';
+export { useClearance, useObstacle, type UseClearanceOptions } from './useClearance.js';
 export { useEscape, useGlobalMode, type UseEscapeOptions } from './useEscape.js';
 export * from '../core/index.js';

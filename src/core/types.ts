@@ -6,6 +6,8 @@ export type DockPolicy = 'replace' | 'stack' | 'tabs';
 
 export type CompactMode = 'sheet' | 'fullscreen' | 'inline';
 
+export type Presentation = 'hidden' | 'floating' | 'docked' | 'maximized' | CompactMode;
+
 export type SnapMode = 'auto' | 'button' | 'both';
 
 export type ResizeDirection = 'n' | 'e' | 's' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
@@ -70,6 +72,7 @@ export interface PanelState extends PersistedPanel {
     zIndex: number;
     layout: Rect | null;
     tabbed: boolean;
+    presentation: Presentation;
 }
 
 export interface EdgeState {
@@ -92,6 +95,8 @@ export interface Snapshot {
     area: Area;
     edges: Readonly<Record<Edge, EdgeState>>;
     snap: SnapPreview | null;
+    compact: boolean;
+    obstacles: Readonly<Record<string, Rect>>;
 }
 
 export interface UpdateOptions {
@@ -156,4 +161,6 @@ export interface ManagerOptions {
     snapThreshold?: number;
     keepVisible?: Size;
     cascade?: number;
+    compactBreakpoint?: number;
+    sheetRatio?: number;
 }

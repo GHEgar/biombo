@@ -85,3 +85,35 @@ test('layout survives a reload', async ({ page }) => {
     await page.getByTestId('toggle-tabla').click();
     await expect(page.getByTestId('panel-tabla')).toHaveAttribute('data-dock', 'bottom');
 });
+
+test('compact mode turns panels into sheets and fullscreen, and frees the map', async ({ page }) => {
+    await page.getByTestId('toggle-tabla').click();
+    await page.getByTestId('panel-tabla').getByRole('button', { name: 'Acoplar' }).click();
+    await page.setViewportSize({ width: 600, height: 800 });
+    await expect(page.getByTestId('panel-tabla')).toHaveAttribute('data-presentation', 'sheet');
+    await expect.poll(async () => (await box(page, 'map')).height).toBe(800);
+    await page.getByTestId('toggle-info').click();
+    await expect(page.getByTestId('panel-info')).toHaveAttribute('data-presentation', 'fullscreen');
+    await page.setViewportSize({ width: 1200, height: 800 });
+    await expect(page.getByTestId('panel-tabla')).toHaveAttribute('data-presentation', 'docked');
+});
+
+test('F6 moves focus between windows', async ({ page }) => {
+    await page.getByTestId('toggle-tabla').click();
+    await page.getByTestId('toggle-info').click();
+    await page.keyboard.press('F6');
+    await expect(page.getByTestId('panel-tabla')).toBeFocused();
+    await expect(page.getByTestId('panel-tabla')).toHaveAttribute('data-topmost', '');
+    await page.keyboard.press('F6');
+    await expect(page.getByTestId('panel-info')).toBeFocused();
+});
+
+test('the pill bar clears the scale and a docked panel', async ({ page }) => {
+    const scale = await box(page, 'scale');
+    await expect.poll(async () => 800 - (await box(page, 'pillbar')).y - (await box(page, 'pillbar')).height)
+        .toBeGreaterThanOrEqual(800 - scale.y + 8 - 1);
+    await page.getByTestId('toggle-tabla').click();
+    await page.getByTestId('panel-tabla').getByRole('button', { name: 'Acoplar' }).click();
+    await expect.poll(async () => (await box(page, 'pillbar')).y + (await box(page, 'pillbar')).height)
+        .toBeLessThanOrEqual(800 - 320);
+});

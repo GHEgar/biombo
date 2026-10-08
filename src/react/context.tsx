@@ -11,10 +11,11 @@ export interface BiomboProviderProps {
     options?: ManagerOptions;
     listenEscape?: boolean;
     trackViewport?: boolean;
+    cycleKey?: string | false;
     children?: ReactNode;
 }
 
-export function BiomboProvider({ manager, options, listenEscape = true, trackViewport = true, children }: BiomboProviderProps) {
+export function BiomboProvider({ manager, options, listenEscape = true, trackViewport = true, cycleKey = 'F6', children }: BiomboProviderProps) {
     const [own] = useState(() => manager ?? createManager(options));
     const value = manager ?? own;
 
@@ -44,6 +45,26 @@ export function BiomboProvider({ manager, options, listenEscape = true, trackVie
             window.removeEventListener('resize', onResize);
         };
     }, [value, trackViewport]);
+
+    useEffect(() => {
+        if (!cycleKey || typeof window === 'undefined') {
+            return undefined;
+        }
+        const onKeyDown = (event: KeyboardEvent): void => {
+            if (event.key !== cycleKey || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) {
+                return;
+            }
+            const id = value.cycle(event.shiftKey ? -1 : 1);
+            if (!id) {
+                return;
+            }
+            event.preventDefault();
+            const element = document.querySelector<HTMLElement>(`[data-biombo-panel="${CSS.escape(id)}"]`);
+            element?.focus();
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [value, cycleKey]);
 
     return <BiomboContext.Provider value={value}>{children}</BiomboContext.Provider>;
 }

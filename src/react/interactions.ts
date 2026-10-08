@@ -26,7 +26,7 @@ export function startDrag(context: InteractionContext, event: ReactPointerEvent<
     const { manager, id, getElement } = context;
     const panel = manager.getPanel(id);
     const config = manager.getConfig(id) ?? {};
-    if (event.button !== 0 || !panel?.visible || panel.maximized || isBlocked(event)) {
+    if (event.button !== 0 || !panel?.visible || panel.maximized || manager.getSnapshot().compact || isBlocked(event)) {
         return;
     }
     const undock = config.undockOnDrag ?? true;
@@ -100,7 +100,7 @@ const dockDelta = (edge: Edge, dx: number, dy: number): number => {
 export function startResize(context: InteractionContext, event: ReactPointerEvent<HTMLElement>, direction?: ResizeDirection): void {
     const { manager, id, getElement } = context;
     const panel = manager.getPanel(id);
-    if (event.button !== 0 || !panel?.visible) {
+    if (event.button !== 0 || !panel?.visible || manager.getSnapshot().compact) {
         return;
     }
     const element = event.currentTarget;

@@ -27,6 +27,7 @@ export interface Manager extends GeometryActions {
     focus: (id: string) => void;
     minimize: (id: string, value?: boolean) => void;
     maximize: (id: string, value?: boolean) => void;
+    cycle: (direction?: 1 | -1) => string | null;
     escape: EscapeStack;
 }
 
@@ -157,8 +158,22 @@ export function createManager(options: ManagerOptions = {}): Manager {
         store.commit([store.event(record, id, value ? 'maximize' : 'unmaximize')]);
     };
 
+    const cycle = (direction: 1 | -1 = 1): string | null => {
+        const visible = [...records.keys()].filter((id) => store.snapshot.panels[id]?.visible);
+        if (visible.length === 0) {
+            return null;
+        }
+        const current = visible.findIndex((id) => store.snapshot.panels[id]?.topmost);
+        const next = visible[(current + direction + visible.length) % visible.length] ?? null;
+        if (next) {
+            focus(next);
+        }
+        return next;
+    };
+
     return {
         ...geometry,
+        cycle,
         register,
         getSnapshot: () => store.snapshot,
         getPanel: (id) => store.snapshot.panels[id] ?? null,

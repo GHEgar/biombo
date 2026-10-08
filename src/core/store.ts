@@ -9,6 +9,7 @@ import type {
     ManagerOptions,
     PanelEvent,
     PersistedPanel,
+    Rect,
     Size,
     Snapshot,
     SnapPreview,
@@ -37,6 +38,7 @@ export interface Store {
     active: Record<string, string | null>;
     viewport: Size;
     snap: SnapPreview | null;
+    obstacles: Record<string, Rect>;
     snapshot: Snapshot;
     seq: number;
     keepVisible: Size;
@@ -64,6 +66,7 @@ export function createStore(options: ManagerOptions): Store {
         active: {},
         viewport: { width: 0, height: 0 },
         snap: null,
+        obstacles: {},
         snapshot: null as unknown as Snapshot,
         seq: 0,
         keepVisible: options.keepVisible ?? DEFAULT_KEEP_VISIBLE,
@@ -145,6 +148,9 @@ function build(store: Store, initial = false): Snapshot {
         defaultDockRatio: store.options.defaultDockRatio ?? DOCK_DEFAULTS.ratio,
         viewport: store.viewport,
         snap: store.snap,
+        obstacles: store.obstacles,
+        compactBreakpoint: store.options.compactBreakpoint ?? 768,
+        sheetRatio: store.options.sheetRatio ?? 0.85,
         previous: initial ? null : store.snapshot,
     });
 }

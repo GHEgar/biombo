@@ -8,7 +8,7 @@ export function DemoPanel({ id, title, config }: { id: string; title: string; co
     const panel = usePanel(id, config);
     const { state } = panel;
     const dockable = config.dockable ?? [];
-    const floating = !state.dock && !state.maximized;
+    const floating = state.presentation === 'floating';
 
     return (
         <section {...panel.getWindowProps()} className="panel" aria-label={title} data-testid={`panel-${id}`}>
@@ -28,10 +28,10 @@ export function DemoPanel({ id, title, config }: { id: string; title: string; co
                 <button type="button" onClick={() => panel.close()} aria-label={`Cerrar ${title}`}>×</button>
             </header>
             <div className="panel-body">
-                <p>{state.dock ? `Acoplado: ${state.dock}` : state.maximized ? 'Maximizado' : 'Flotante'}</p>
+                <p>{`Presentación: ${state.presentation}${state.dock ? ` · borde ${state.dock}` : ''}`}</p>
                 <input placeholder="Un input no arrastra" />
             </div>
-            {state.dock && !state.maximized && (
+            {state.presentation === 'docked' && state.dock && (
                 <div {...panel.getResizerProps()} className={`resizer dock ${OPPOSITE[state.dock]}`} data-testid={`resizer-${id}`} />
             )}
             {floating && CORNERS.map((direction) => (

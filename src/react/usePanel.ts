@@ -11,7 +11,9 @@ export interface WindowProps {
     'data-topmost'?: '';
     'data-dock'?: Edge;
     'data-maximized'?: '';
+    'data-presentation': PanelState['presentation'];
     role: 'dialog';
+    tabIndex: -1;
     'aria-modal'?: true;
     hidden?: true;
     style: CSSProperties;
@@ -85,25 +87,22 @@ function fallbackState(id: string, config: PanelConfig): PanelState {
         zIndex: 0,
         layout: null,
         tabbed: false,
+        presentation: 'hidden',
     };
 }
 
 function positionStyle(state: PanelState): CSSProperties {
-    const { layout } = state;
-    if (!state.visible) {
-        return { display: 'none', zIndex: state.zIndex };
+    const { layout, presentation, zIndex } = state;
+    if (presentation === 'hidden') {
+        return { display: 'none', zIndex };
     }
-    if (!layout) {
-        return { zIndex: state.zIndex };
+    if (presentation === 'sheet' && layout) {
+        return { position: 'fixed', left: 0, right: 0, bottom: 0, maxHeight: layout.height, zIndex };
     }
-    return {
-        position: 'fixed',
-        left: layout.x,
-        top: layout.y,
-        width: layout.width,
-        height: layout.height,
-        zIndex: state.zIndex,
-    };
+    if (!layout || presentation === 'inline') {
+        return { zIndex };
+    }
+    return { position: 'fixed', left: layout.x, top: layout.y, width: layout.width, height: layout.height, zIndex };
 }
 
 export function usePanel(id: string, config: PanelConfig = {}): UsePanelResult {
@@ -145,7 +144,9 @@ export function usePanel(id: string, config: PanelConfig = {}): UsePanelResult {
             ref: setElement,
             'data-biombo-panel': id,
             'data-state': !state.open ? 'closed' : state.minimized ? 'minimized' : 'open',
+            'data-presentation': state.presentation,
             role: 'dialog',
+            tabIndex: -1,
             style: { ...input.style, ...positionStyle(state) },
             onPointerDownCapture: (event) => {
                 input.onPointerDownCapture?.(event);
