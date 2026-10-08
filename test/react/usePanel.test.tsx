@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { StrictMode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
-import { BiomboProvider, createManager, useGlobalMode, usePanel, type Manager } from '../../src/react/index.js';
+import { BiomboProvider, createManager, useEscape, useGlobalMode, usePanel, type Manager } from '../../src/react/index.js';
 
 afterEach(cleanup);
 
@@ -84,5 +84,22 @@ describe('usePanel', () => {
         expect(manager.getPanel('a')).not.toBeNull();
         view.unmount();
         expect(manager.getPanel('a')).toBeNull();
+    });
+});
+
+describe('useEscape without provider', () => {
+    it('falls back to a shared stack so only the latest layer closes', () => {
+        const first = vi.fn();
+        const second = vi.fn();
+        function Layer({ onEscape }: { onEscape: () => void }) {
+            useEscape(() => {
+                onEscape();
+            });
+            return null;
+        }
+        render(<><Layer onEscape={first} /><Layer onEscape={second} /></>);
+        pressEscape();
+        expect(second).toHaveBeenCalledOnce();
+        expect(first).not.toHaveBeenCalled();
     });
 });

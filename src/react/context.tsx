@@ -69,6 +69,10 @@ export function BiomboProvider({ manager, options, listenEscape = true, trackVie
     return <BiomboContext.Provider value={value}>{children}</BiomboContext.Provider>;
 }
 
+export function useOptionalManager(): Manager | null {
+    return useContext(BiomboContext);
+}
+
 export function useManager(): Manager {
     const manager = useContext(BiomboContext);
     if (!manager) {

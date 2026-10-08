@@ -1,4 +1,4 @@
-export { BiomboProvider, useManager, type BiomboProviderProps } from './context.js';
+export { BiomboProvider, useManager, useOptionalManager, type BiomboProviderProps } from './context.js';
 export {
     usePanel,
     type HandleProps,
