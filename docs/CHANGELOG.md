@@ -5,6 +5,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 
 ## [No publicado]
 
+## [0.4.0] - 2026-10-08
+
+Primera versión empaquetada. No está en npm: mapalab la consume vendorizada mientras llega la 1.0.
+
 ### Agregado
 
 - Gestor headless de paneles (`createManager`): registro, grupos `free`/`single`, z-order por
