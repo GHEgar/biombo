@@ -81,6 +81,12 @@ export interface EdgeState {
     active: string | null;
 }
 
+export interface GroupState {
+    mode: GroupMode;
+    ids: readonly string[];
+    active: string | null;
+}
+
 export interface SnapPreview {
     id: string;
     edge: Edge;
@@ -97,6 +103,7 @@ export interface Snapshot {
     snap: SnapPreview | null;
     compact: boolean;
     obstacles: Readonly<Record<string, Rect>>;
+    groups: Readonly<Record<string, GroupState>>;
 }
 
 export interface UpdateOptions {
@@ -114,7 +121,8 @@ export type PanelEventType =
     | 'dock'
     | 'undock'
     | 'resize'
-    | 'move';
+    | 'move'
+    | 'reorder';
 
 export interface PanelEvent {
     type: PanelEventType;
@@ -123,6 +131,7 @@ export interface PanelEvent {
     dock?: Edge | null;
     size?: number | null;
     rect?: Rect | null;
+    ids?: readonly string[];
 }
 
 export interface GroupConfig {

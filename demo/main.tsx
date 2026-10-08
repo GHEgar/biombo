@@ -1,24 +1,10 @@
 import { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BiomboProvider, localStorageAdapter, useArea, useGlobalMode, useSnapPreview, type PanelConfig } from 'biombo/react';
+import { BiomboProvider, localStorageAdapter, useArea, useGlobalMode, useSnapPreview } from 'biombo/react';
 import { DemoPanel } from './DemoPanel';
+import { PANELS, TITLES } from './panels';
 import { PillBar, Scale } from './PillBar';
 import { Toolbar } from './Toolbar';
-
-export const PANELS: Record<string, { title: string; config: PanelConfig }> = {
-    tabla: {
-        title: 'Tabla',
-        config: { dockable: ['top', 'right', 'bottom', 'left'], defaultSize: { width: 520, height: 280 } },
-    },
-    capas: {
-        title: 'Capas',
-        config: { dockable: ['left', 'right'], defaultSize: { width: 300, height: 360 }, initial: { dockSize: 300 } },
-    },
-    info: {
-        title: 'Info',
-        config: { defaultSize: { width: 320, height: 200 }, minimizable: false, compact: 'fullscreen' },
-    },
-};
 
 function FakeMap() {
     const area = useArea();
@@ -63,7 +49,7 @@ function App() {
             ))}
             <SnapPreview />
             <Scale />
-            <PillBar titles={Object.fromEntries(Object.entries(PANELS).map(([id, panel]) => [id, panel.title]))} />
+            <PillBar titles={TITLES} />
         </BiomboProvider>
     );
 }

@@ -25,6 +25,7 @@ export type {
     Focusable,
     GroupConfig,
     GroupMode,
+    GroupState,
     ManagerOptions,
     PanelConfig,
     PanelEvent,

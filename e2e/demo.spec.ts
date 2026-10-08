@@ -117,3 +117,31 @@ test('the pill bar clears the scale and a docked panel', async ({ page }) => {
     await expect.poll(async () => (await box(page, 'pillbar')).y + (await box(page, 'pillbar')).height)
         .toBeLessThanOrEqual(800 - 320);
 });
+
+test('two panels docked on the right share the edge as tabs and reorder by dragging', async ({ page }) => {
+    await page.getByTestId('toggle-leyenda').click();
+    await page.getByTestId('toggle-notas').click();
+    await expect(page.getByTestId('panel-notas')).toBeVisible();
+    await expect(page.getByTestId('panel-leyenda')).toBeHidden();
+    await expect.poll(async () => (await box(page, 'map')).width).toBe(1200 - 320);
+
+    const strip = page.getByTestId('panel-notas').getByRole('tablist');
+    await strip.getByRole('tab', { name: 'Leyenda' }).click();
+    await expect(page.getByTestId('panel-leyenda')).toBeVisible();
+    await expect(page.getByTestId('panel-notas')).toBeHidden();
+    await expect.poll(async () => (await box(page, 'map')).width).toBe(1200 - 280);
+
+    const tabs = page.getByTestId('panel-leyenda').getByRole('tab');
+    await expect(tabs).toHaveText(['Leyenda', 'Notas']);
+    const first = await tabs.nth(0).boundingBox();
+    const second = await tabs.nth(1).boundingBox();
+    if (!first || !second) {
+        throw new Error('tabs without box');
+    }
+    await page.mouse.move(first.x + 10, first.y + 10);
+    await page.mouse.down();
+    await page.mouse.move(first.x + 30, first.y + 10, { steps: 3 });
+    await page.mouse.move(second.x + second.width - 4, first.y + 10, { steps: 5 });
+    await page.mouse.up();
+    await expect(tabs).toHaveText(['Notas', 'Leyenda']);
+});

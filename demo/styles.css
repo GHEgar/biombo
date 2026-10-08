@@ -188,3 +188,26 @@ button.mode.on {
 .panel:focus-visible {
     outline: 3px solid #6b4bd8;
 }
+
+.tabs {
+    display: flex;
+    gap: 2px;
+    padding: 6px 8px 0;
+    background: #fff;
+    border-bottom: 1px solid #e3e8f2;
+}
+
+.tab {
+    border-radius: 8px 8px 0 0;
+    border-bottom: 0;
+    touch-action: none;
+}
+
+.tab[data-active] {
+    background: #1a2664;
+    color: #fff;
+}
+
+.tab[data-dragging] {
+    opacity: 0.6;
+}

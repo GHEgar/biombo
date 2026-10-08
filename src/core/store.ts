@@ -39,6 +39,7 @@ export interface Store {
     viewport: Size;
     snap: SnapPreview | null;
     obstacles: Record<string, Rect>;
+    groupOrder: Record<string, readonly string[]>;
     snapshot: Snapshot;
     seq: number;
     keepVisible: Size;
@@ -67,6 +68,7 @@ export function createStore(options: ManagerOptions): Store {
         viewport: { width: 0, height: 0 },
         snap: null,
         obstacles: {},
+        groupOrder: {},
         snapshot: null as unknown as Snapshot,
         seq: 0,
         keepVisible: options.keepVisible ?? DEFAULT_KEEP_VISIBLE,
@@ -151,6 +153,7 @@ function build(store: Store, initial = false): Snapshot {
         obstacles: store.obstacles,
         compactBreakpoint: store.options.compactBreakpoint ?? 768,
         sheetRatio: store.options.sheetRatio ?? 0.85,
+        groupOrder: store.groupOrder,
         previous: initial ? null : store.snapshot,
     });
 }

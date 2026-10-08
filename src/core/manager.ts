@@ -1,5 +1,6 @@
 import { ESCAPE_PRIORITY, type EscapeStack } from './escape.js';
 import { createGeometryActions, placeOnOpen, type GeometryActions } from './geometry.js';
+import { createOrderActions, type OrderActions } from './order.js';
 import type { PanelRecord } from './snapshot.js';
 import { createStore, DEFAULT_BANDS, DEFAULT_GROUP } from './store.js';
 import type { Focusable, ManagerOptions, PanelConfig, PanelEvent, PanelState, PersistedPanel, Snapshot } from './types.js';
@@ -15,7 +16,7 @@ const CLOSED: PersistedPanel = {
     rect: null,
 };
 
-export interface Manager extends GeometryActions {
+export interface Manager extends GeometryActions, OrderActions {
     register: (id: string, config?: PanelConfig) => () => void;
     getSnapshot: () => Snapshot;
     getPanel: (id: string) => PanelState | null;
@@ -34,6 +35,7 @@ export interface Manager extends GeometryActions {
 export function createManager(options: ManagerOptions = {}): Manager {
     const store = createStore(options);
     const geometry = createGeometryActions(store);
+    const ordering = createOrderActions(store);
     const { records } = store;
 
     const register = (id: string, config: PanelConfig = {}): (() => void) => {
@@ -173,6 +175,7 @@ export function createManager(options: ManagerOptions = {}): Manager {
 
     return {
         ...geometry,
+        ...ordering,
         cycle,
         register,
         getSnapshot: () => store.snapshot,

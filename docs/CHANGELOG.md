@@ -34,6 +34,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 - Holgura: `clearance()` en el core y los hooks `useClearance` y `useObstacle`; un elemento esquiva
   los paneles visibles y los obstáculos registrados que tenga cerca de su borde, encadenándolos.
 - F6 y Mayús+F6 recorren los paneles visibles y les dan foco (`manager.cycle`, `cycleKey`).
+- Pestañas: `useTabs({ group } | { edge })` con roles ARIA, flechas, Inicio y Fin, y reordenamiento
+  arrastrando. Con `onReorder` el orden es controlado por el consumidor; sin él, biombo lo guarda con
+  `setGroupOrder` o `setEdgeOrder`. Estado `snapshot.groups` y evento `reorder`.
+- `serialize()` y `hydrate()` para sincronizar el estado con un store externo.
 
 ### Corregido
 

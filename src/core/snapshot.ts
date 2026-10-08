@@ -6,6 +6,7 @@ import type {
     EdgeState,
     Focusable,
     GroupMode,
+    GroupState,
     PanelConfig,
     PanelState,
     PersistedPanel,
@@ -40,6 +41,7 @@ export interface SnapshotInput {
     obstacles: Readonly<Record<string, Rect>>;
     compactBreakpoint: number;
     sheetRatio: number;
+    groupOrder: Readonly<Record<string, readonly string[]>>;
     previous: Snapshot | null;
 }
 
@@ -162,6 +164,31 @@ function place(id: string, record: PanelRecord, context: PlacementContext): Plac
     return { layout: record.state.dock ? null : record.state.rect, presentation: 'floating', tabbed, band: record.band };
 }
 
+export function tabOrder(registered: readonly string[], preferred: readonly string[] = []): string[] {
+    const known = new Set(registered);
+    const head = preferred.filter((id) => known.has(id));
+    const placed = new Set(head);
+    return [...head, ...registered.filter((id) => !placed.has(id))];
+}
+
+function buildGroups(input: SnapshotInput): Record<string, GroupState> {
+    const members = new Map<string, string[]>();
+    for (const [id, record] of input.records) {
+        members.set(record.group, [...members.get(record.group) ?? [], id]);
+    }
+    const groups: Record<string, GroupState> = {};
+    for (const [group, registered] of members) {
+        const ids = tabOrder(registered, input.groupOrder[group]).filter((id) => input.records.get(id)?.state.open);
+        const active = input.active[group] ?? null;
+        const next: GroupState = { mode: input.groupMode(group), ids, active: active && ids.includes(active) ? active : null };
+        const previous = input.previous?.groups[group];
+        const same = previous && previous.mode === next.mode && previous.active === next.active
+            && previous.ids.length === ids.length && previous.ids.every((id, i) => id === ids[i]);
+        groups[group] = same ? previous : next;
+    }
+    return groups;
+}
+
 export function buildSnapshot(input: SnapshotInput): Snapshot {
     const visible = new Set(input.order.filter((id) => isPanelVisible(input, id)));
     const edges = buildEdges(input, visible);
@@ -230,5 +257,6 @@ export function buildSnapshot(input: SnapshotInput): Snapshot {
         snap: input.snap,
         compact,
         obstacles: input.obstacles,
+        groups: buildGroups(input),
     };
 }

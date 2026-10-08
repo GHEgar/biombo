@@ -1,4 +1,6 @@
 import { usePanel, type Edge, type PanelConfig, type ResizeDirection } from 'biombo/react';
+import { TITLES } from './panels';
+import { TabStrip } from './TabStrip';
 
 const CORNERS: ResizeDirection[] = ['n', 'e', 's', 'w', 'ne', 'nw', 'se', 'sw'];
 
@@ -27,6 +29,7 @@ export function DemoPanel({ id, title, config }: { id: string; title: string; co
                 <button type="button" onClick={() => panel.maximize(!state.maximized)} aria-label={`Maximizar ${title}`}>□</button>
                 <button type="button" onClick={() => panel.close()} aria-label={`Cerrar ${title}`}>×</button>
             </header>
+            {state.presentation === 'docked' && state.dock && <TabStrip edge={state.dock} titles={TITLES} />}
             <div className="panel-body">
                 <p>{`Presentación: ${state.presentation}${state.dock ? ` · borde ${state.dock}` : ''}`}</p>
                 <input placeholder="Un input no arrastra" />

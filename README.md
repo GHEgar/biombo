@@ -1,7 +1,8 @@
 # biombo
 
-Headless panel and window management for React. biombo owns the state (stacking, focus, Escape,
-docking, minimize, persistence) and you own every pixel: it ships no styles.
+Headless panel and window management for React. biombo owns the state — stacking, focus, Escape,
+docking, minimize, tabs, persistence — and you own every pixel: it ships no styles, only state, events,
+`data-*`/ARIA attributes and the functional inline style (`position`, `left/top/width/height`, `z-index`).
 
 ```bash
 npm install biombo
@@ -29,11 +30,30 @@ function Map() {
 }
 
 <BiomboProvider options={{ persist: { storage: localStorageAdapter(), key: 'app.panels', version: 1 } }}>
+    <Map />
     <Table />
 </BiomboProvider>
 ```
 
-`biombo` is the framework-free core; `biombo/react` adds the hooks. Run `npm run demo` to try it.
+## What it does
+
+| Feature | API |
+|---|---|
+| Z-order by named bands, focus on pointer down | `bands`, `getWindowProps` |
+| Escape closes only the topmost layer; global modes last | `useEscape`, `useGlobalMode` |
+| Groups where one panel is shown at a time | `groups: { name: { mode: 'single' } }` |
+| Drag, snap to edges, undock by dragging | `getHandleProps`, `snap`, `undockOnDrag`, `useSnapPreview` |
+| Dock to any edge with `replace`, `stack` or `tabs` policies | `dock`, `edges`, `useEdge` |
+| Usable area left for your content | `useArea`, `onAreaChange` |
+| Resize docked and floating panels | `getResizerProps(direction?)` |
+| Minimize and maximize | `minimize`, `maximize` |
+| Compact mode: sheets, fullscreen or inline below a breakpoint | `compactBreakpoint`, `compact`, `useCompact` |
+| Keep floating controls clear of panels and obstacles | `useClearance`, `useObstacle` |
+| Tabs with keyboard and drag reorder, controlled or not | `useTabs`, `onReorder` |
+| F6 cycles focus between panels | `cycleKey` |
+| Versioned persistence and external sync | `persist`, `serialize`, `hydrate`, `onEvent` |
+
+`biombo` is the framework-free core; `biombo/react` adds the hooks. `npm run demo` runs a playground.
 
 ## License
 
