@@ -8,8 +8,8 @@ export {
     type WindowProps,
     type WindowPropsInput,
 } from './usePanel.js';
-export { useArea, useCompact, useEdge, useSnapPreview, useViewport } from './useLayout.js';
-export { useClearance, useObstacle, type UseClearanceOptions } from './useClearance.js';
+export { useArea, useCompact, useEdge, useInteraction, useSnapPreview, useViewport } from './useLayout.js';
+export { useClearance, useCovered, useObstacle, type UseClearanceOptions, type UseCoveredOptions, type UseObstacleOptions } from './useClearance.js';
 export { moveId, useTabs, type TabListProps, type TabProps, type TabScope, type UseTabsOptions, type UseTabsResult } from './useTabs.js';
 export { useEscape, useGlobalMode, type UseEscapeOptions } from './useEscape.js';
 export * from '../core/index.js';

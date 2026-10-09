@@ -6,6 +6,7 @@ import type {
     DockPolicy,
     Edge,
     GroupMode,
+    Interaction,
     ManagerOptions,
     PanelEvent,
     PersistedPanel,
@@ -40,6 +41,7 @@ export interface Store {
     snap: SnapPreview | null;
     obstacles: Record<string, Rect>;
     groupOrder: Record<string, readonly string[]>;
+    interaction: Interaction | null;
     snapshot: Snapshot;
     seq: number;
     keepVisible: Size;
@@ -69,6 +71,7 @@ export function createStore(options: ManagerOptions): Store {
         snap: null,
         obstacles: {},
         groupOrder: {},
+        interaction: null,
         snapshot: null as unknown as Snapshot,
         seq: 0,
         keepVisible: options.keepVisible ?? DEFAULT_KEEP_VISIBLE,
@@ -154,6 +157,7 @@ function build(store: Store, initial = false): Snapshot {
         compactBreakpoint: store.options.compactBreakpoint ?? 768,
         sheetRatio: store.options.sheetRatio ?? 0.85,
         groupOrder: store.groupOrder,
+        interaction: store.interaction,
         previous: initial ? null : store.snapshot,
     });
 }

@@ -1,6 +1,6 @@
 import { useCallback, useSyncExternalStore } from 'react';
-import type { Area, Edge, EdgeState, Size, SnapPreview } from '../core/types.js';
-import { useManager } from './context.js';
+import type { Area, Edge, EdgeState, Interaction, Size, SnapPreview } from '../core/types.js';
+import { useManager, useOptionalManager } from './context.js';
 
 function useSelect<T>(select: (snapshot: ReturnType<ReturnType<typeof useManager>['getSnapshot']>) => T): T {
     const manager = useManager();
@@ -32,4 +32,12 @@ export function useEdge(edge: Edge): EdgeState {
 
 export function useCompact(): boolean {
     return useSelect(selectCompact);
+}
+
+const noSubscription = (): (() => void) => () => undefined;
+
+export function useInteraction(): Interaction | null {
+    const manager = useOptionalManager();
+    const read = useCallback(() => manager?.getSnapshot().interaction ?? null, [manager]);
+    return useSyncExternalStore(manager ? manager.subscribe : noSubscription, read, read);
 }

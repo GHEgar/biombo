@@ -7,6 +7,7 @@ import type {
     Focusable,
     GroupMode,
     GroupState,
+    Interaction,
     PanelConfig,
     PanelState,
     PersistedPanel,
@@ -42,6 +43,7 @@ export interface SnapshotInput {
     compactBreakpoint: number;
     sheetRatio: number;
     groupOrder: Readonly<Record<string, readonly string[]>>;
+    interaction: Interaction | null;
     previous: Snapshot | null;
 }
 
@@ -258,5 +260,6 @@ export function buildSnapshot(input: SnapshotInput): Snapshot {
         compact,
         obstacles: input.obstacles,
         groups: buildGroups(input),
+        interaction: input.interaction,
     };
 }

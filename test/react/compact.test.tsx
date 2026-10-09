@@ -63,11 +63,11 @@ describe('F6', () => {
     });
 });
 
-function Pill({ obstacle }: { obstacle: Rect }) {
+function Pill({ obstacle, groups }: { obstacle: Rect; groups?: string[] }) {
     const pillRef = useRef<HTMLDivElement>(null);
     const scaleRef = useRef<HTMLDivElement>(null);
-    useObstacle(scaleRef);
-    const bottom = useClearance(pillRef, { side: 'bottom', base: 12, panels: false });
+    useObstacle(scaleRef, { group: 'controls' });
+    const bottom = useClearance(pillRef, { side: 'bottom', base: 12, panels: false, ...(groups ? { groups } : {}) });
     return (
         <>
             <div ref={(node) => { if (node) fakeRect(node, obstacle); scaleRef.current = node; }} />
@@ -82,5 +82,19 @@ describe('useClearance', () => {
         const manager = createManager();
         render(<BiomboProvider manager={manager}><Pill obstacle={{ x: 50, y: 770, width: 150, height: 20 }} /></BiomboProvider>);
         expect(screen.getByTestId('pill').style.bottom).toBe('38px');
+    });
+
+    it('only counts the requested obstacle groups', () => {
+        setViewport(1000, 800);
+        const manager = createManager();
+        render(<BiomboProvider manager={manager}><Pill obstacle={{ x: 50, y: 770, width: 150, height: 20 }} groups={['panels']} /></BiomboProvider>);
+        expect(screen.getByTestId('pill').style.bottom).toBe('12px');
+    });
+});
+
+describe('helpers without provider', () => {
+    it('do not throw: clearance returns the base and obstacles are ignored', () => {
+        render(<Pill obstacle={{ x: 50, y: 770, width: 150, height: 20 }} />);
+        expect(screen.getByTestId('pill').style.bottom).toBe('12px');
     });
 });

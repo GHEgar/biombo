@@ -52,6 +52,7 @@ export function startDrag(context: InteractionContext, event: ReactPointerEvent<
                 }
                 started = true;
                 capture(handle, moveEvent.pointerId);
+                manager.setInteraction({ id, kind: 'drag' });
                 if (panel.dock && panel.layout) {
                     const grab = {
                         x: (start.x - panel.layout.x) / Math.max(1, panel.layout.width),
@@ -76,6 +77,7 @@ export function startDrag(context: InteractionContext, event: ReactPointerEvent<
             frame.flush();
             const preview = manager.getSnapshot().snap;
             manager.setSnap(null);
+            manager.setInteraction(null);
             if (!started || !current) {
                 return;
             }
@@ -110,6 +112,7 @@ export function startResize(context: InteractionContext, event: ReactPointerEven
     manager.focus(id);
     capture(element, event.pointerId);
     event.preventDefault();
+    manager.setInteraction({ id, kind: 'resize' });
 
     if (edge && panel.layout) {
         const initial = isVertical(edge) ? panel.layout.height : panel.layout.width;
@@ -121,6 +124,7 @@ export function startResize(context: InteractionContext, event: ReactPointerEven
             },
             end: () => {
                 frame.flush();
+                manager.setInteraction(null);
                 manager.setDockSize(id, size);
             },
         });
@@ -129,6 +133,7 @@ export function startResize(context: InteractionContext, event: ReactPointerEven
 
     const base = panel.layout ?? measure(getElement());
     if (!base || !direction) {
+        manager.setInteraction(null);
         return;
     }
     const min = manager.getConfig(id)?.minSize ?? DEFAULT_MIN_SIZE;
@@ -141,6 +146,7 @@ export function startResize(context: InteractionContext, event: ReactPointerEven
         },
         end: () => {
             frame.flush();
+            manager.setInteraction(null);
             manager.setRect(id, current);
         },
     });

@@ -60,6 +60,9 @@ export function createManager(options: ManagerOptions = {}): Manager {
             });
         }
         records.set(id, record);
+        if (record.state.open) {
+            placeOnOpen(store, record);
+        }
         if (!store.order.includes(id)) {
             store.order = [...store.order, id];
         }

@@ -141,3 +141,17 @@ describe('docking', () => {
         expect(manager.getPanel('a')).toBe(a);
     });
 });
+
+describe('placement of panels that start open', () => {
+    it('places a persisted open panel on register and when the viewport arrives', () => {
+        const early = createManager();
+        early.register('a', { defaultSize: { width: 400, height: 200 }, initial: { open: true } });
+        expect(early.getPanel('a')?.layout).toBeNull();
+        early.setViewport(viewport);
+        expect(early.getPanel('a')?.layout).toEqual({ x: 300, y: 300, width: 400, height: 200 });
+
+        const late = setup();
+        late.register('b', { defaultSize: { width: 400, height: 200 }, initial: { open: true } });
+        expect(late.getPanel('b')?.layout).toEqual({ x: 300, y: 300, width: 400, height: 200 });
+    });
+});

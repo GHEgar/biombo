@@ -46,7 +46,9 @@ describe('interactions', () => {
         expect(manager.getPanel('w')?.layout).toEqual({ x: 300, y: 300, width: 400, height: 200 });
         down(screen.getByTestId('w-handle'), 310, 310);
         move(360, 330);
+        expect(manager.getSnapshot().interaction).toEqual({ id: 'w', kind: 'drag' });
         up(360, 330);
+        expect(manager.getSnapshot().interaction).toBeNull();
         expect(manager.getPanel('w')?.rect).toEqual({ x: 350, y: 320, width: 400, height: 200 });
         expect(screen.getByTestId('w').style.left).toBe('350px');
     });
@@ -101,8 +103,10 @@ describe('interactions', () => {
         const resizer = screen.getByTestId('w-dock-resizer');
         expect(resizer.getAttribute('aria-valuenow')).toBe('320');
         down(resizer, 500, 480);
+        expect(manager.getSnapshot().interaction).toEqual({ id: 'w', kind: 'resize' });
         move(500, 380);
         up(500, 380);
+        expect(manager.getSnapshot().interaction).toBeNull();
         expect(manager.getPanel('w')?.dockSize).toBe(420);
         expect(manager.getSnapshot().area.bottom).toBe(420);
     });

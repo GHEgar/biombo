@@ -5,6 +5,29 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 
 ## [No publicado]
 
+## [0.5.0] - 2026-10-08
+
+Cambios que pidió la migración de mapalab.
+
+### Agregado
+
+- `useEscape` funciona sin provider con una pila global, y `useOptionalManager` para adaptadores.
+- Grupos de obstáculos: `useObstacle(ref, { group })` y `groups` en `useClearance` y `useCovered`.
+- `useCovered` e `isCovered`: si un elemento queda tapado por un panel visible o un obstáculo.
+- `snapshot.interaction` y `useInteraction()`: el arrastre o el tirador en curso, para apagar
+  transiciones mientras dura.
+
+### Cambiado
+
+- `useObstacle` mide en cada render y en cada cambio del gestor: un obstáculo que se mueve sin cambiar
+  de tamaño ya no queda con un rectángulo viejo.
+- `useObstacle`, `useClearance` y `useCovered` no truenan sin provider.
+
+### Corregido
+
+- Un panel que arranca abierto (persistido o por `initial`) se coloca con su `defaultSize` al
+  registrarse o al llegar el viewport, igual que con `open()`.
+
 ## [0.4.0] - 2026-10-08
 
 Primera versión empaquetada. No está en npm: mapalab la consume vendorizada mientras llega la 1.0.

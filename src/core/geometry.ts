@@ -1,7 +1,7 @@
 import { axisLength, centerRect, clampDockSize, clampRect, DOCK_DEFAULTS, dockPreviewRect, resolveDockSize, sameRect, snapEdge } from './layout.js';
 import type { PanelRecord } from './snapshot.js';
 import type { Store } from './store.js';
-import type { Edge, PanelEvent, Rect, Size, SnapPreview, UpdateOptions } from './types.js';
+import type { Edge, Interaction, PanelEvent, Rect, Size, SnapPreview, UpdateOptions } from './types.js';
 
 export interface GeometryActions {
     dock: (id: string, edge: Edge | null) => void;
@@ -13,6 +13,7 @@ export interface GeometryActions {
     snapAt: (id: string, point: Point) => SnapPreview | null;
     undockAt: (id: string, point: Point, grab: Point) => Rect | null;
     setObstacle: (key: string, rect: Rect | null) => void;
+    setInteraction: (interaction: Interaction | null) => void;
 }
 
 export interface Point {
@@ -111,6 +112,9 @@ export function createGeometryActions(store: Store): GeometryActions {
         }
         store.viewport = { width: size.width, height: size.height };
         for (const record of store.records.values()) {
+            if (record.state.open) {
+                placeOnOpen(store, record);
+            }
             const rect = record.state.rect;
             const clamped = rect ? clampRect(rect, store.viewport, store.keepVisible) : null;
             const dockSize = record.state.dockSize === null ? null : clampSize(store, record, record.state.dockSize);
@@ -186,7 +190,17 @@ export function createGeometryActions(store: Store): GeometryActions {
         store.commit([], { transient: true });
     };
 
+    const setInteraction = (interaction: Interaction | null): void => {
+        const current = store.interaction;
+        if (current === interaction || (current && interaction && current.id === interaction.id && current.kind === interaction.kind)) {
+            return;
+        }
+        store.interaction = interaction;
+        store.commit([], { transient: true });
+    };
+
     return {
+        setInteraction,
         setObstacle,
         dock,
         setDockSize,

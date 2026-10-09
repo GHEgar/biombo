@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clearance, createManager } from '../../src/core/index.js';
+import { clearance, createManager, isCovered } from '../../src/core/index.js';
 
 describe('compact mode', () => {
     it('switches below the breakpoint, frees the area and presents panels as declared', () => {
@@ -89,5 +89,14 @@ describe('obstacles', () => {
         expect(manager.getSnapshot()).toBe(before);
         manager.setObstacle('scale', null);
         expect(manager.getSnapshot().obstacles).toEqual({});
+    });
+});
+
+describe('isCovered', () => {
+    it('detects any overlap with a non-empty rect', () => {
+        const target = { x: 100, y: 100, width: 50, height: 50 };
+        expect(isCovered(target, [{ x: 140, y: 140, width: 20, height: 20 }])).toBe(true);
+        expect(isCovered(target, [{ x: 150, y: 100, width: 20, height: 20 }])).toBe(false);
+        expect(isCovered(target, [{ x: 110, y: 110, width: 0, height: 20 }])).toBe(false);
     });
 });

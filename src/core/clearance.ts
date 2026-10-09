@@ -44,3 +44,9 @@ export function clearance(target: Rect, obstacles: readonly Rect[], viewport: Si
     }
     return Math.round(offset);
 }
+
+export function isCovered(target: Rect, obstacles: readonly Rect[]): boolean {
+    return obstacles.some((rect) => rect.width > 0 && rect.height > 0
+        && rect.x < target.x + target.width && rect.x + rect.width > target.x
+        && rect.y < target.y + target.height && rect.y + rect.height > target.y);
+}

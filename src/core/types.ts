@@ -87,6 +87,11 @@ export interface GroupState {
     active: string | null;
 }
 
+export interface Interaction {
+    id: string;
+    kind: 'drag' | 'resize';
+}
+
 export interface SnapPreview {
     id: string;
     edge: Edge;
@@ -104,6 +109,7 @@ export interface Snapshot {
     compact: boolean;
     obstacles: Readonly<Record<string, Rect>>;
     groups: Readonly<Record<string, GroupState>>;
+    interaction: Interaction | null;
 }
 
 export interface UpdateOptions {
