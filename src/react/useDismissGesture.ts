@@ -45,6 +45,7 @@ export function useDismissGesture(ref: RefObject<HTMLElement | null>, options: U
     const [direction, setDirection] = useState<SwipeDirection | 0>(0);
     const latest = useRef(options);
     const stateRef = useRef<SwipeState>('idle');
+    const directionRef = useRef<SwipeDirection | 0>(0);
     const exitRef = useRef<(() => void) | null>(null);
     const axis = options.axis ?? 'x';
 
@@ -53,6 +54,13 @@ export function useDismissGesture(ref: RefObject<HTMLElement | null>, options: U
     });
 
     useEffect(() => () => exitRef.current?.(), []);
+
+    const turn = useCallback((next: SwipeDirection | 0) => {
+        if (directionRef.current !== next) {
+            directionRef.current = next;
+            setDirection(next);
+        }
+    }, []);
 
     const change = useCallback((next: SwipeState) => {
         if (stateRef.current !== next) {
@@ -63,7 +71,7 @@ export function useDismissGesture(ref: RefObject<HTMLElement | null>, options: U
 
     const finish = useCallback((element: HTMLElement, sign: SwipeDirection) => {
         change('dismissed');
-        setDirection(sign);
+        turn(sign);
         const win = element.ownerDocument.defaultView;
         write(element, sign * (axis === 'x' ? win?.innerWidth ?? 0 : win?.innerHeight ?? 0), 1);
         const done = (): void => {
@@ -86,7 +94,7 @@ export function useDismissGesture(ref: RefObject<HTMLElement | null>, options: U
             element.removeEventListener('transitionend', onTransitionEnd);
             exitRef.current = null;
         };
-    }, [axis, change, manager]);
+    }, [axis, change, manager, turn]);
 
     const onPointerDown = useCallback((event: ReactPointerEvent<HTMLElement>) => {
         const { disabled, pointerTypes = TOUCH_ONLY, threshold = SWIPE_DEFAULTS.threshold, lock = SWIPE_DEFAULTS.lock } = latest.current;
@@ -111,6 +119,7 @@ export function useDismissGesture(ref: RefObject<HTMLElement | null>, options: U
             },
             onMove: (point) => {
                 delta = along(point);
+                turn(delta > 0 ? 1 : delta < 0 ? -1 : 0);
                 const progress = Math.min(Math.abs(delta) / threshold, 1);
                 change(Math.abs(delta) > threshold ? 'armed' : 'moving');
                 frame.run(() => write(element, delta, progress));
@@ -125,17 +134,18 @@ export function useDismissGesture(ref: RefObject<HTMLElement | null>, options: U
                     return;
                 }
                 change('idle');
+                turn(0);
                 write(element, 0, 0);
             },
         });
-    }, [ref, axis, change, finish]);
+    }, [ref, axis, change, finish, turn]);
 
     const reset = useCallback(() => {
         exitRef.current?.();
         change('idle');
-        setDirection(0);
+        turn(0);
         write(ref.current, 0, 0);
-    }, [ref, change]);
+    }, [ref, change, turn]);
 
     const getGestureProps = useCallback((): GestureProps => ({
         'data-swipe': state,

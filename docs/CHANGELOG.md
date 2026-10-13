@@ -5,6 +5,14 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 
 ## [No publicado]
 
+## [0.6.2] - 2026-10-13
+
+### Cambiado
+
+- `useDismissGesture` publica `direction` también mientras se arrastra (signo del desplazamiento, `0` en
+  reposo), no solo al descartar. Solo re-renderiza cuando cambia de lado. Lo pide el letrero de las
+  tarjetas de mapalab, que va del lado que se descubre.
+
 ## [0.6.1] - 2026-10-13
 
 ### Agregado

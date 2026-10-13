@@ -117,7 +117,7 @@ describe('useDraggable', () => {
 function Card({ onDismiss, pointerTypes }: { onDismiss: (direction: SwipeDirection) => void; pointerTypes?: readonly string[] }) {
     const ref = useRef<HTMLDivElement>(null);
     const gesture = useDismissGesture(ref, { onDismiss, exitMs: 200, ...(pointerTypes ? { pointerTypes } : {}) });
-    return <div ref={ref} {...gesture.getGestureProps()} data-testid="card">{gesture.state}</div>;
+    return <div ref={ref} {...gesture.getGestureProps()} data-testid="card" data-direction={gesture.direction}>{gesture.state}</div>;
 }
 
 describe('useDismissGesture', () => {
@@ -130,7 +130,9 @@ describe('useDismissGesture', () => {
         down(card, 100, 100, 'touch');
         move(150, 102);
         expect(card.dataset.swipe).toBe('moving');
+        expect(card.dataset.direction).toBe('1');
         move(-30, 104);
+        expect(card.dataset.direction).toBe('-1');
         expect(card.dataset.swipe).toBe('armed');
         act(() => vi.advanceTimersByTime(20));
         expect(card.style.getPropertyValue('--biombo-swipe')).toBe('-130px');
@@ -151,6 +153,7 @@ describe('useDismissGesture', () => {
         move(160, 100);
         up(160, 100);
         expect(card.dataset.swipe).toBe('idle');
+        expect(card.dataset.direction).toBe('0');
         expect(card.style.getPropertyValue('--biombo-swipe')).toBe('0px');
         down(card, 100, 100, 'touch');
         move(104, 140);
