@@ -24,7 +24,16 @@ export function isVisible(element: HTMLElement): boolean {
     if (typeof element.checkVisibility === 'function') {
         return element.checkVisibility({ visibilityProperty: true });
     }
-    return element.getClientRects().length > 0;
+    const view = element.ownerDocument.defaultView;
+    if (!view) {
+        return true;
+    }
+    for (let node: Element | null = element; node; node = node.parentElement) {
+        if (view.getComputedStyle(node).display === 'none') {
+            return false;
+        }
+    }
+    return view.getComputedStyle(element).visibility !== 'hidden';
 }
 
 export function focusableIn(container: HTMLElement): HTMLElement[] {

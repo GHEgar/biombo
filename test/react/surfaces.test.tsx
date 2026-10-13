@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useRef, useState, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { lockScroll, Portal, useDismissOutside, useFocusTrap, useScrollLock } from '../../src/react/index.js';
+import { focusableIn, lockScroll, Portal, useDismissOutside, useFocusTrap, useScrollLock } from '../../src/react/index.js';
 
 afterEach(cleanup);
 
@@ -174,5 +174,17 @@ describe('Portal', () => {
         expect(screen.getByText('in body').parentElement).toBe(document.body);
         expect(screen.getByText('in target').parentElement).toBe(target);
         target.remove();
+    });
+});
+
+describe('focusableIn without checkVisibility', () => {
+    it('falls back to computed display and visibility', () => {
+        const original = HTMLElement.prototype.checkVisibility;
+        Object.defineProperty(HTMLElement.prototype, 'checkVisibility', { configurable: true, value: undefined });
+        document.body.innerHTML = '<div id="c"><button>a</button><div style="display:none"><button>b</button></div><button style="visibility:hidden">c</button><button disabled>d</button><a href="#">e</a></div>';
+        const names = focusableIn(document.getElementById('c') as HTMLElement).map((element) => element.textContent);
+        Object.defineProperty(HTMLElement.prototype, 'checkVisibility', { configurable: true, value: original });
+        document.body.innerHTML = '';
+        expect(names).toEqual(['a', 'e']);
     });
 });

@@ -5,6 +5,14 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 
 ## [No publicado]
 
+## [0.6.3] - 2026-10-13
+
+### Corregido
+
+- `focusableIn` (y con él `useFocusTrap`) no encontraba ningún enfocable donde no existe
+  `checkVisibility` y no hay layout, como jsdom: el respaldo era `getClientRects()`, siempre vacío ahí.
+  Ahora revisa `display` y `visibility` calculados. Lo encontró la migración de sieej.
+
 ## [0.6.2] - 2026-10-13
 
 ### Cambiado
