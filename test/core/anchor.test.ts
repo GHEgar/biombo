@@ -81,3 +81,14 @@ describe('contain: full', () => {
         expect(manager.clampRect({ x: -40, y: 0, width: 300, height: 200 }, 'full')).toEqual({ x: 10, y: 10, width: 300, height: 200 });
     });
 });
+
+describe('placement: over', () => {
+    it('centers on the anchor in both axes and stays inside the bounds', () => {
+        expect(placeAnchored({ x: 500, y: 400, width: 0, height: 0 }, size, bounds, { placement: 'over' }))
+            .toMatchObject({ x: 400, y: 350, placement: 'over', maxWidth: null, maxHeight: null, arrow: 0 });
+        expect(placeAnchored({ x: 990, y: 5, width: 0, height: 0 }, size, bounds, { placement: 'over' }))
+            .toMatchObject({ x: 792, y: 8 });
+        expect(placeAnchored({ x: 500, y: 400, width: 0, height: 0 }, { width: 200, height: 900 }, bounds, { placement: 'over' }))
+            .toMatchObject({ y: 8, maxHeight: 784 });
+    });
+});

@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState, type CSSProperties, type RefObject } from 'react';
-import { ANCHOR_DEFAULTS, placeAnchored, type AnchoredPlacement, type AnchorOptions, type Side } from '../core/anchor.js';
+import { ANCHOR_DEFAULTS, placeAnchored, type AnchoredPlacement, type AnchorOptions, type Placement } from '../core/anchor.js';
 import { containRect } from '../core/layout.js';
 import type { Rect } from '../core/types.js';
 import { boundaryRect, type Boundary } from './bounds.js';
@@ -22,13 +22,13 @@ export interface FloatingPropsInput {
 
 export interface FloatingProps {
     style: CSSProperties;
-    'data-placement': Side;
+    'data-placement': Placement;
     'data-outside'?: '';
 }
 
 export interface UseAnchoredPositionResult {
     getFloatingProps: (input?: FloatingPropsInput) => FloatingProps;
-    placement: Side;
+    placement: Placement;
     arrow: number;
     ready: boolean;
     outside: boolean;

@@ -5,6 +5,14 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 
 ## [No publicado]
 
+## [0.6.1] - 2026-10-13
+
+### Agregado
+
+- `placement: 'over'` en `placeAnchored` y `useAnchoredPosition`: la superficie se centra sobre el ancla
+  en los dos ejes y se acota a los límites. Tipo `Placement`. Lo pide el modo centrado del InfoBox de
+  mapalab.
+
 ## [0.6.0] - 2026-10-13
 
 Superficies efímeras: lo que modales, tooltips e InfoBox resolvían a mano en las apps del IIEG.

@@ -2,10 +2,12 @@ import type { Rect, Size } from './types.js';
 
 export type Side = 'top' | 'right' | 'bottom' | 'left';
 
+export type Placement = Side | 'over';
+
 export type Align = 'start' | 'center' | 'end';
 
 export interface AnchorOptions {
-    placement?: Side;
+    placement?: Placement;
     align?: Align;
     offset?: number;
     margin?: number;
@@ -15,7 +17,7 @@ export interface AnchorOptions {
 export interface AnchoredPlacement {
     x: number;
     y: number;
-    placement: Side;
+    placement: Placement;
     maxWidth: number | null;
     maxHeight: number | null;
     arrow: number;
@@ -73,8 +75,27 @@ export function isOutside(anchor: Rect, bounds: Rect): boolean {
         || anchor.y > bounds.y + bounds.height;
 }
 
+function placeOver(anchor: Rect, floating: Size, bounds: Rect, margin: number): AnchoredPlacement {
+    const roomX = Math.max(0, bounds.width - margin * 2);
+    const roomY = Math.max(0, bounds.height - margin * 2);
+    const width = Math.min(floating.width, roomX);
+    const height = Math.min(floating.height, roomY);
+    return {
+        x: Math.round(cross(anchor.x, anchor.width, width, bounds.x, bounds.width, margin, 'center')),
+        y: Math.round(cross(anchor.y, anchor.height, height, bounds.y, bounds.height, margin, 'center')),
+        placement: 'over',
+        maxWidth: floating.width > roomX ? roomX : null,
+        maxHeight: floating.height > roomY ? roomY : null,
+        arrow: 0,
+        outside: isOutside(anchor, bounds),
+    };
+}
+
 export function placeAnchored(anchor: Rect, floating: Size, bounds: Rect, options: AnchorOptions = {}): AnchoredPlacement {
     const { placement, align, offset, margin, arrowPadding } = { ...ANCHOR_DEFAULTS, ...options };
+    if (placement === 'over') {
+        return placeOver(anchor, floating, bounds, margin);
+    }
     const vertical = isVerticalSide(placement);
     const need = vertical ? floating.height : floating.width;
     const { side, limit } = chooseSide(placement, need, (candidate) => space(candidate, anchor, bounds, offset, margin));

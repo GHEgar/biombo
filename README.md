@@ -56,7 +56,7 @@ function Map() {
 | Focus trap with stacked traps, `inert` for the rest of the page and focus returned on close | `useFocusTrap` |
 | Body scroll lock that survives nested modals | `useScrollLock` |
 | Dismiss on a press outside, topmost surface only | `useDismissOutside` |
-| Tooltips and popovers anchored to an element or a point, flipping and clamped to the viewport | `useAnchoredPosition`, `placeAnchored` |
+| Tooltips and popovers anchored to an element or a point, flipping and clamped to the viewport; `over` centers on it | `useAnchoredPosition`, `placeAnchored` |
 | Render into `document.body`, SSR-safe | `Portal` |
 | Drag any element inside the viewport, alone or on top of an anchored surface | `useDraggable` |
 | Swipe to dismiss, driven by CSS variables instead of re-renders | `useDismissGesture` |
