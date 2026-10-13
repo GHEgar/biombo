@@ -5,11 +5,11 @@ export interface PointerHandlers {
     end: (event: PointerEvent, cancelled: boolean) => void;
 }
 
-export function trackPointer(element: HTMLElement, pointerId: number, handlers: PointerHandlers): void {
+export function trackPointer(element: HTMLElement, pointerId: number, handlers: PointerHandlers): () => void {
     const doc = element.ownerDocument;
     const win = doc.defaultView;
     if (!win) {
-        return;
+        return () => undefined;
     }
     const previousSelect = doc.body.style.userSelect;
     doc.body.style.userSelect = 'none';
@@ -39,6 +39,45 @@ export function trackPointer(element: HTMLElement, pointerId: number, handlers: 
     win.addEventListener('pointermove', move);
     win.addEventListener('pointerup', up);
     win.addEventListener('pointercancel', cancel);
+    return cleanup;
+}
+
+export interface Point {
+    x: number;
+    y: number;
+}
+
+export interface DragCallbacks {
+    threshold: number;
+    onStart?: (point: Point, event: PointerEvent) => boolean;
+    onMove: (point: Point, event: PointerEvent) => void;
+    onEnd: (started: boolean, cancelled: boolean, point: Point) => void;
+}
+
+const pointOf = (event: { clientX: number; clientY: number }): Point => ({ x: event.clientX, y: event.clientY });
+
+export function trackDrag(handle: HTMLElement, event: { pointerId: number; clientX: number; clientY: number }, callbacks: DragCallbacks): () => void {
+    const start = pointOf(event);
+    let started = false;
+    const stop = trackPointer(handle, event.pointerId, {
+        move: (moveEvent) => {
+            const point = pointOf(moveEvent);
+            if (!started) {
+                if (Math.hypot(point.x - start.x, point.y - start.y) < callbacks.threshold) {
+                    return;
+                }
+                if (callbacks.onStart?.(point, moveEvent) === false) {
+                    stop();
+                    return;
+                }
+                started = true;
+                capture(handle, moveEvent.pointerId);
+            }
+            callbacks.onMove(point, moveEvent);
+        },
+        end: (endEvent, cancelled) => callbacks.onEnd(started, cancelled, pointOf(endEvent)),
+    });
+    return stop;
 }
 
 export function capture(element: HTMLElement, pointerId: number): void {

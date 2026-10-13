@@ -51,6 +51,26 @@ export function clampRect(rect: Rect, viewport: Size, keepVisible: Size): Rect {
     };
 }
 
+export interface ContainedRect extends Rect {
+    maxHeight: number | null;
+}
+
+export function containRect(rect: Rect, bounds: Rect, margin = 0): ContainedRect {
+    const left = bounds.x + margin;
+    const top = bounds.y + margin;
+    const availableWidth = Math.max(0, bounds.width - margin * 2);
+    const availableHeight = Math.max(0, bounds.height - margin * 2);
+    const width = Math.min(rect.width, availableWidth);
+    const height = Math.min(rect.height, availableHeight);
+    return {
+        x: Math.round(clamp(rect.x, left, left + availableWidth - width)),
+        y: Math.round(clamp(rect.y, top, top + availableHeight - height)),
+        width,
+        height,
+        maxHeight: rect.height > availableHeight ? availableHeight : null,
+    };
+}
+
 export function areaRect(area: Area, viewport: Size): Rect {
     return {
         x: area.left,

@@ -1,4 +1,4 @@
-import { axisLength, centerRect, clampDockSize, clampRect, DOCK_DEFAULTS, dockPreviewRect, resolveDockSize, sameRect, snapEdge } from './layout.js';
+import { axisLength, centerRect, clampDockSize, clampRect, containRect, DOCK_DEFAULTS, dockPreviewRect, resolveDockSize, sameRect, snapEdge } from './layout.js';
 import type { PanelRecord } from './snapshot.js';
 import type { Store } from './store.js';
 import type { Edge, Interaction, PanelEvent, Rect, Size, SnapPreview, UpdateOptions } from './types.js';
@@ -9,7 +9,7 @@ export interface GeometryActions {
     setRect: (id: string, rect: Rect | null, options?: UpdateOptions) => void;
     setViewport: (size: Size) => void;
     setSnap: (preview: SnapPreview | null) => void;
-    clampRect: (rect: Rect) => Rect;
+    clampRect: (rect: Rect, id?: string) => Rect;
     snapAt: (id: string, point: Point) => SnapPreview | null;
     undockAt: (id: string, point: Point, grab: Point) => Rect | null;
     setObstacle: (key: string, rect: Rect | null) => void;
@@ -22,6 +22,20 @@ export interface Point {
 }
 
 const hasSize = (size: Size): boolean => size.width > 0 && size.height > 0;
+
+export const DEFAULT_CONTAIN_MARGIN = 8;
+
+function fitRect(store: Store, record: PanelRecord | undefined, rect: Rect): Rect {
+    if (!hasSize(store.viewport)) {
+        return rect;
+    }
+    if (record?.config.contain !== 'full') {
+        return clampRect(rect, store.viewport, store.keepVisible);
+    }
+    const bounds = { x: 0, y: 0, width: store.viewport.width, height: store.viewport.height };
+    const { x, y, width, height } = containRect(rect, bounds, record.config.containMargin ?? DEFAULT_CONTAIN_MARGIN);
+    return { x, y, width, height };
+}
 
 function clampSize(store: Store, record: PanelRecord, size: number): number {
     const edge = record.state.dock;
@@ -45,11 +59,7 @@ export function placeOnOpen(store: Store, record: PanelRecord): void {
         .filter((other) => other !== record && other.state.open && !other.state.dock && !other.state.minimized).length;
     record.state = {
         ...record.state,
-        rect: clampRect(
-            centerRect(size, store.snapshot.area, store.viewport, floating, store.options.cascade ?? 26),
-            store.viewport,
-            store.keepVisible,
-        ),
+        rect: fitRect(store, record, centerRect(size, store.snapshot.area, store.viewport, floating, store.options.cascade ?? 26)),
     };
 }
 
@@ -101,7 +111,7 @@ export function createGeometryActions(store: Store): GeometryActions {
         if (!record) {
             return;
         }
-        const next = rect && hasSize(store.viewport) ? clampRect(rect, store.viewport, store.keepVisible) : rect;
+        const next = rect ? fitRect(store, record, rect) : rect;
         store.update(id, { rect: next });
         store.commit([store.event(record, id, 'move', { rect: next })], options);
     };
@@ -116,7 +126,7 @@ export function createGeometryActions(store: Store): GeometryActions {
                 placeOnOpen(store, record);
             }
             const rect = record.state.rect;
-            const clamped = rect ? clampRect(rect, store.viewport, store.keepVisible) : null;
+            const clamped = rect ? fitRect(store, record, rect) : null;
             const dockSize = record.state.dockSize === null ? null : clampSize(store, record, record.state.dockSize);
             if (!sameRect(rect, clamped) || dockSize !== record.state.dockSize) {
                 record.state = { ...record.state, rect: clamped, dockSize };
@@ -166,12 +176,12 @@ export function createGeometryActions(store: Store): GeometryActions {
                 width: Math.min(layout.width, store.viewport.width / 2),
                 height: Math.min(layout.height, store.viewport.height / 2),
             };
-        const rect = clampRect({
+        const rect = fitRect(store, record, {
             x: point.x - size.width * grab.x,
             y: point.y - Math.min(grab.y, size.height),
             width: size.width,
             height: size.height,
-        }, store.viewport, store.keepVisible);
+        });
         store.update(id, { dock: null, rect });
         store.commit([store.event(record, id, 'undock', { dock: null })]);
         return rect;
@@ -207,7 +217,7 @@ export function createGeometryActions(store: Store): GeometryActions {
         setRect,
         setViewport,
         setSnap,
-        clampRect: (rect) => (hasSize(store.viewport) ? clampRect(rect, store.viewport, store.keepVisible) : rect),
+        clampRect: (rect, id) => fitRect(store, id === undefined ? undefined : store.records.get(id), rect),
         snapAt,
         undockAt,
     };

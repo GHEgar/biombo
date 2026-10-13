@@ -5,6 +5,37 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 
 ## [No publicado]
 
+## [0.6.0] - 2026-10-13
+
+Superficies efímeras: lo que modales, tooltips e InfoBox resolvían a mano en las apps del IIEG.
+
+### Agregado
+
+- `useFocusTrap`: trampa de foco con pila global (solo atiende la de arriba), lista de enfocables
+  recalculada en cada Tab, contenedor enfocable si está vacío, recuperación del foco que escapa
+  (`contain: 'strict'`), `inert` en el resto de la página (`inertOthers`) y foco devuelto al cerrar.
+- `useScrollLock` y `lockScroll`: bloqueo del scroll de `body` con contador y compensación de la barra.
+- `useDismissOutside`: descarte por presión fuera, solo si empezó y terminó fuera, solo la superficie
+  de arriba; `getDismissProps` cuenta como dentro a los hijos en portal.
+- `placeAnchored` (core) y `useAnchoredPosition`: posición junto a un elemento, un rect o un punto,
+  con volteo, acotado al viewport o al área útil, `maxHeight`/`maxWidth` si no cabe, flecha, y
+  seguimiento en scroll, resize y cambios de tamaño.
+- `Portal`, SSR-seguro. `react-dom` pasa a peer opcional.
+- `containRect` (core) y `contain: 'full'` con `containMargin` en `PanelConfig`: el flotante queda
+  completo dentro del viewport.
+- `useDraggable`: arrastre de cualquier elemento con contención, suelto o sobre una superficie anclada.
+- `useDismissGesture`: deslizar para descartar con bloqueo de eje, umbral y variables CSS
+  `--biombo-swipe` y `--biombo-swipe-progress`; solo táctil por defecto.
+- `mergeRefs` y `focusableIn`.
+- Demo: modal anidado, tooltips en las esquinas y en una lista con scroll, e InfoBox anclado al clic
+  con tarjetas deslizables.
+
+### Cambiado
+
+- `manager.clampRect(rect, id?)` respeta el modo de contención del panel.
+- El arrastre de `getHandleProps` comparte su seguimiento del puntero con `useDraggable` y
+  `useDismissGesture`.
+
 ### Cambiado
 
 - El lint usa `@ghegar/eslint-config` (presets `base`, `react` y `ts`) en lugar de una config propia.

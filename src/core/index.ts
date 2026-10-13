@@ -3,10 +3,13 @@ export { createEscapeStack, ESCAPE_PRIORITY, type EscapeLayer, type EscapeStack 
 export { DEFAULT_PERSIST_FIELDS, localStorageAdapter, memoryAdapter } from './persistence.js';
 export { DEFAULT_KEEP_VISIBLE } from './store.js';
 export { clearance, isCovered, type ClearanceOptions } from './clearance.js';
+export { ANCHOR_DEFAULTS, isOutside, placeAnchored, type Align, type AnchoredPlacement, type AnchorOptions, type Side } from './anchor.js';
+export { DEFAULT_CONTAIN_MARGIN } from './geometry.js';
 export {
     areaRect,
     centerRect,
     clampRect,
+    containRect,
     DOCK_DEFAULTS,
     dockPreviewRect,
     EDGES,
@@ -14,10 +17,12 @@ export {
     resizeRect,
     snapEdge,
     ZERO_AREA,
+    type ContainedRect,
 } from './layout.js';
 export type {
     Area,
     CompactMode,
+    ContainMode,
     DockPolicy,
     Edge,
     EdgeConfig,

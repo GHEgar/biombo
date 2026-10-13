@@ -1,15 +1,24 @@
-import { StrictMode, useState } from 'react';
+import { StrictMode, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BiomboProvider, localStorageAdapter, useArea, useGlobalMode, useSnapPreview } from 'biombo/react';
+import { BiomboProvider, localStorageAdapter, useArea, useGlobalMode, useSnapPreview, type Point } from 'biombo/react';
 import { DemoPanel } from './DemoPanel';
+import { InfoBox } from './InfoBox';
 import { PANELS, TITLES } from './panels';
 import { PillBar, Scale } from './PillBar';
+import { Surfaces } from './Surfaces';
 import { Toolbar } from './Toolbar';
 
-function FakeMap() {
+function FakeMap({ onPick }: { onPick: (point: Point) => void }) {
     const area = useArea();
+    const ref = useRef<HTMLElement>(null);
+    useEffect(() => {
+        const element = ref.current;
+        const onClick = (event: MouseEvent): void => onPick({ x: event.clientX, y: event.clientY });
+        element?.addEventListener('click', onClick);
+        return () => element?.removeEventListener('click', onClick);
+    }, [onPick]);
     return (
-        <main className="map" style={{ inset: `${area.top}px ${area.right}px ${area.bottom}px ${area.left}px` }} data-testid="map">
+        <main ref={ref} className="map" style={{ inset: `${area.top}px ${area.right}px ${area.bottom}px ${area.left}px` }} data-testid="map">
             <span>{`área útil · top ${area.top} · right ${area.right} · bottom ${area.bottom} · left ${area.left}`}</span>
         </main>
     );
@@ -35,6 +44,7 @@ function Mode() {
 }
 
 function App() {
+    const [point, setPoint] = useState<Point | null>(null);
     return (
         <BiomboProvider
             options={{
@@ -42,7 +52,7 @@ function App() {
                 persist: { storage: localStorageAdapter(), key: 'biombo.demo', version: 1 },
             }}
         >
-            <FakeMap />
+            <FakeMap onPick={setPoint} />
             <Toolbar panels={PANELS} mode={<Mode />} />
             {Object.entries(PANELS).map(([id, panel]) => (
                 <DemoPanel key={id} id={id} title={panel.title} config={panel.config} />
@@ -50,6 +60,8 @@ function App() {
             <SnapPreview />
             <Scale />
             <PillBar titles={TITLES} />
+            <Surfaces />
+            {point && <InfoBox key={`${point.x},${point.y}`} point={point} onClose={() => setPoint(null)} />}
         </BiomboProvider>
     );
 }

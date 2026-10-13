@@ -2,7 +2,7 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 import { isVertical, resizeRect } from '../core/layout.js';
 import type { Manager } from '../core/manager.js';
 import type { Edge, Rect, ResizeDirection, Size } from '../core/types.js';
-import { applyRect, capture, createFrame, measure, trackPointer } from './pointer.js';
+import { applyRect, capture, createFrame, measure, trackDrag, trackPointer } from './pointer.js';
 
 export const DRAG_THRESHOLD = 4;
 export const UNDOCK_THRESHOLD = 24;
@@ -16,7 +16,7 @@ export interface InteractionContext {
     getElement: () => HTMLElement | null;
 }
 
-const isBlocked = (event: ReactPointerEvent<HTMLElement>): boolean => {
+export const isBlocked = (event: ReactPointerEvent<HTMLElement>): boolean => {
     const handle = event.currentTarget;
     const target = event.target instanceof Element ? event.target.closest(NO_DRAG) : null;
     return !!target && target !== handle && handle.contains(target);
@@ -34,46 +34,38 @@ export function startDrag(context: InteractionContext, event: ReactPointerEvent<
         return;
     }
     manager.focus(id);
-    const handle = event.currentTarget;
     const start = { x: event.clientX, y: event.clientY };
-    const threshold = panel.dock ? (typeof undock === 'number' ? undock : UNDOCK_THRESHOLD) : DRAG_THRESHOLD;
     const frame = createFrame();
     let base: Rect | null = panel.dock ? null : panel.layout ?? measure(getElement());
     let origin = start;
     let current = base;
-    let started = false;
 
-    trackPointer(handle, event.pointerId, {
-        move: (moveEvent) => {
-            const point = { x: moveEvent.clientX, y: moveEvent.clientY };
-            if (!started) {
-                if (Math.hypot(point.x - start.x, point.y - start.y) < threshold) {
-                    return;
-                }
-                started = true;
-                capture(handle, moveEvent.pointerId);
-                manager.setInteraction({ id, kind: 'drag' });
-                if (panel.dock && panel.layout) {
-                    const grab = {
-                        x: (start.x - panel.layout.x) / Math.max(1, panel.layout.width),
-                        y: start.y - panel.layout.y,
-                    };
-                    base = manager.undockAt(id, point, grab);
-                    current = base;
-                    origin = point;
-                    return;
-                }
+    trackDrag(event.currentTarget, event, {
+        threshold: panel.dock ? (typeof undock === 'number' ? undock : UNDOCK_THRESHOLD) : DRAG_THRESHOLD,
+        onStart: (point) => {
+            manager.setInteraction({ id, kind: 'drag' });
+            if (panel.dock && panel.layout) {
+                const grab = {
+                    x: (start.x - panel.layout.x) / Math.max(1, panel.layout.width),
+                    y: start.y - panel.layout.y,
+                };
+                base = manager.undockAt(id, point, grab);
+                current = base;
+                origin = point;
             }
+            return true;
+        },
+        onMove: (point, moveEvent) => {
             if (!base) {
                 return;
             }
             moveEvent.preventDefault();
-            const next = manager.clampRect({ ...base, x: base.x + point.x - origin.x, y: base.y + point.y - origin.y });
+            const next = manager.clampRect({ ...base, x: base.x + point.x - origin.x, y: base.y + point.y - origin.y }, id);
             current = next;
             frame.run(() => applyRect(getElement(), next));
             manager.setSnap(manager.snapAt(id, point));
         },
-        end: (_endEvent, cancelled) => {
+        onEnd: (started, cancelled) => {
             frame.flush();
             const preview = manager.getSnapshot().snap;
             manager.setSnap(null);

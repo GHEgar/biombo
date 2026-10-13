@@ -35,6 +35,8 @@ export interface Focusable {
     focus: () => void;
 }
 
+export type ContainMode = 'partial' | 'full';
+
 export interface PanelConfig {
     group?: string;
     band?: string;
@@ -51,6 +53,8 @@ export interface PanelConfig {
     maxDockRatio?: number;
     snap?: SnapMode;
     undockOnDrag?: boolean | number;
+    contain?: ContainMode;
+    containMargin?: number;
 }
 
 export interface PersistedPanel {
