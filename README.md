@@ -61,7 +61,8 @@ function Map() {
 | Drag any element inside the viewport, alone or on top of an anchored surface | `useDraggable` |
 | Swipe to dismiss, driven by CSS variables instead of re-renders | `useDismissGesture` |
 
-`biombo` is the framework-free core; `biombo/react` adds the hooks. `npm run demo` runs a playground.
+`biombo` is the framework-free core; `biombo/react` adds the hooks. `npm run demo` runs a playground, also
+published at <https://ghegar.github.io/biombo/>.
 
 ## Surfaces
 
