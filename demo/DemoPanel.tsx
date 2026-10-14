@@ -20,19 +20,19 @@ export function DemoPanel({ id, title, config }: { id: string; title: string; co
                 <span className="spacer" />
                 {dockable.includes('bottom') && (
                     <button type="button" onClick={() => panel.dock(state.dock ? null : 'bottom')}>
-                        {state.dock ? 'Soltar' : 'Acoplar'}
+                        {state.dock ? 'Undock' : 'Dock'}
                     </button>
                 )}
                 {config.minimizable !== false && (
-                    <button type="button" onClick={() => panel.minimize()} aria-label={`Minimizar ${title}`}>_</button>
+                    <button type="button" onClick={() => panel.minimize()} aria-label={`Minimize ${title}`}>_</button>
                 )}
-                <button type="button" onClick={() => panel.maximize(!state.maximized)} aria-label={`Maximizar ${title}`}>□</button>
-                <button type="button" onClick={() => panel.close()} aria-label={`Cerrar ${title}`}>×</button>
+                <button type="button" onClick={() => panel.maximize(!state.maximized)} aria-label={`Maximize ${title}`}>□</button>
+                <button type="button" onClick={() => panel.close()} aria-label={`Close ${title}`}>×</button>
             </header>
             {state.presentation === 'docked' && state.dock && <TabStrip edge={state.dock} titles={TITLES} />}
             <div className="panel-body">
-                <p>{`Presentación: ${state.presentation}${state.dock ? ` · borde ${state.dock}` : ''}`}</p>
-                <input placeholder="Un input no arrastra" />
+                <p>{`Presentation: ${state.presentation}${state.dock ? ` · edge ${state.dock}` : ''}`}</p>
+                <input placeholder="An input does not drag" />
             </div>
             {state.presentation === 'docked' && state.dock && (
                 <div {...panel.getResizerProps()} className={`resizer dock ${OPPOSITE[state.dock]}`} data-testid={`resizer-${id}`} />

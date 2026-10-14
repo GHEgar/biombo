@@ -16,7 +16,7 @@ export function PillBar({ titles }: { titles: Record<string, string> }) {
 
     return (
         <div ref={ref} className="pillbar" style={{ bottom }} data-testid="pillbar">
-            {minimized.length === 0 && <span className="pillbar-empty">Sin minimizados</span>}
+            {minimized.length === 0 && <span className="pillbar-empty">Nothing minimized</span>}
             {minimized.map((panel) => (
                 <button key={panel.id} type="button" className="pill" onClick={() => manager.open(panel.id)}>
                     {`${titles[panel.id] ?? panel.id} ▴`}

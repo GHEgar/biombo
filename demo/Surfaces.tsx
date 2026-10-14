@@ -22,9 +22,9 @@ function Modal({ title, testId, onClose, children }: { title: string; testId: st
             <div className="backdrop" data-testid={`${testId}-backdrop`}>
                 <div ref={ref} {...getTrapProps()} {...getDismissProps()} role="dialog" aria-modal="true" aria-label={title} className="modal" data-testid={testId}>
                     <h2>{title}</h2>
-                    <input data-testid={`${testId}-input`} placeholder="Nombre" />
+                    <input data-testid={`${testId}-input`} placeholder="Name" />
                     {children}
-                    <button type="button" data-testid={`${testId}-close`} onClick={onClose}>Cerrar</button>
+                    <button type="button" data-testid={`${testId}-close`} onClick={onClose}>Close</button>
                 </div>
             </div>
         </Portal>
@@ -39,8 +39,8 @@ export function ModalDemo() {
             <button type="button" data-testid="open-modal" onClick={() => setOpen(true)}>Modal</button>
             {open && (
                 <Modal title="Modal" testId="modal" onClose={() => setOpen(false)}>
-                    <button type="button" data-testid="open-nested" onClick={() => setNested(true)}>Modal anidado</button>
-                    {nested && <Modal title="Anidado" testId="nested" onClose={() => setNested(false)} />}
+                    <button type="button" data-testid="open-nested" onClick={() => setNested(true)}>Nested modal</button>
+                    {nested && <Modal title="Nested" testId="nested" onClose={() => setNested(false)} />}
                 </Modal>
             )}
         </>
@@ -88,15 +88,15 @@ export function Surfaces() {
         <>
             <nav className="surfaces">
                 <ModalDemo />
-                <span>Clic en el mapa: InfoBox</span>
+                <span>Click the map: InfoBox</span>
             </nav>
-            <Tip id="tl" className="corner tl" placement="top" text="Arriba no cabe: voltea abajo." />
-            <Tip id="tr" className="corner tr" placement="right" text="A la derecha no cabe: voltea a la izquierda." />
-            <Tip id="bl" className="corner bl" placement="bottom" text="Abajo no cabe: voltea arriba." />
-            <Tip id="br" className="corner br" text="Esquina: se acota al viewport." />
+            <Tip id="tl" className="corner tl" placement="top" text="No room above: flips below." />
+            <Tip id="tr" className="corner tr" placement="right" text="No room on the right: flips left." />
+            <Tip id="bl" className="corner bl" placement="bottom" text="No room below: flips above." />
+            <Tip id="br" className="corner br" text="Corner: clamped to the viewport." />
             <div className="scroller" data-testid="scroller">
-                <p>Lista con scroll</p>
-                <Tip id="scroll" placement="right" text="Sigue al disparador al hacer scroll." />
+                <p>Scrolling list</p>
+                <Tip id="scroll" placement="right" text="Follows its trigger on scroll." />
                 <div className="scroller-fill" />
             </div>
         </>

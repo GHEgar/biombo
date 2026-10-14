@@ -5,6 +5,15 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 
 ## [No publicado]
 
+### Cambiado
+
+- El demo está en inglés.
+
+### Corregido
+
+- `placeAnchored` redondea la posición dentro de los márgenes: con un ancho fraccionario, el borde de
+  un tooltip acotado podía salirse hasta medio píxel.
+
 ## [0.6.3] - 2026-10-13
 
 ### Corregido

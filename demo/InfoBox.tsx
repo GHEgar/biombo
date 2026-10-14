@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { ESCAPE_PRIORITY, Portal, useAnchoredPosition, useDismissGesture, useDraggable, useEscape, type Point } from 'biombo/react';
 
-const CARDS = ['Municipio', 'Colonia', 'Manzana'];
+const CARDS = ['Municipality', 'Neighborhood', 'Block'];
 const ANY_POINTER = ['touch', 'pen', 'mouse'];
 
 function SwipeCard({ label, onDismiss }: { label: string; onDismiss: () => void }) {
@@ -10,7 +10,7 @@ function SwipeCard({ label, onDismiss }: { label: string; onDismiss: () => void 
     return (
         <div ref={ref} {...getGestureProps()} className="card" data-testid={`card-${label}`}>
             <strong>{label}</strong>
-            <span>{state === 'armed' ? 'Suelta para quitar' : 'Desliza para quitar'}</span>
+            <span>{state === 'armed' ? 'Release to remove' : 'Swipe to remove'}</span>
         </div>
     );
 }
@@ -27,13 +27,13 @@ export function InfoBox({ point, onClose }: { point: Point; onClose: () => void 
             <div ref={ref} {...anchored.getFloatingProps()} className="infobox" data-testid="infobox">
                 <header {...drag.getHandleProps()} className="infobox-bar" data-testid="infobox-handle">
                     <span>{`Info · ${Math.round(point.x)}, ${Math.round(point.y)}`}</span>
-                    <button type="button" onClick={onClose} aria-label="Cerrar">×</button>
+                    <button type="button" onClick={onClose} aria-label="Close">×</button>
                 </header>
                 <div className="infobox-body">
                     {cards.map((label) => (
                         <SwipeCard key={label} label={label} onDismiss={() => setCards((list) => list.filter((item) => item !== label))} />
                     ))}
-                    {cards.length === 0 && <p>Sin tarjetas.</p>}
+                    {cards.length === 0 && <p>No cards.</p>}
                 </div>
                 <span className="infobox-arrow" data-placement={anchored.placement} style={{ left: anchored.arrow }} />
             </div>

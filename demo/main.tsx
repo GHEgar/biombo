@@ -19,7 +19,7 @@ function FakeMap({ onPick }: { onPick: (point: Point) => void }) {
     }, [onPick]);
     return (
         <main ref={ref} className="map" style={{ inset: `${area.top}px ${area.right}px ${area.bottom}px ${area.left}px` }} data-testid="map">
-            <span>{`área útil · top ${area.top} · right ${area.right} · bottom ${area.bottom} · left ${area.left}`}</span>
+            <span>{`usable area · top ${area.top} · right ${area.right} · bottom ${area.bottom} · left ${area.left}`}</span>
         </main>
     );
 }
@@ -38,7 +38,7 @@ function Mode() {
     useGlobalMode(() => setActive(false), active);
     return (
         <button type="button" className={active ? 'mode on' : 'mode'} data-testid="mode" onClick={() => setActive((value) => !value)}>
-            {active ? 'Modo activo (Esc sale)' : 'Activar modo'}
+            {active ? 'Mode active (Esc exits)' : 'Activate mode'}
         </button>
     );
 }

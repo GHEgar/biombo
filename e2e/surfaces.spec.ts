@@ -95,7 +95,7 @@ test('the InfoBox anchors to the click, drags inside the viewport and drops swip
     expect(Math.round(dragged.x + dragged.width)).toBe(1200 - 10);
     expect(Math.round(dragged.y)).toBe(10);
 
-    const card = page.getByTestId('card-Colonia');
+    const card = page.getByTestId('card-Neighborhood');
     const cardBox = await box(card);
     await page.mouse.move(cardBox.x + 150, cardBox.y + 15);
     await page.mouse.down();
@@ -105,7 +105,7 @@ test('the InfoBox anchors to the click, drags inside the viewport and drops swip
     await expect(card).toHaveAttribute('data-swipe', 'armed');
     await page.mouse.up();
     await expect(card).toHaveCount(0);
-    await expect(page.getByTestId('card-Municipio')).toBeVisible();
+    await expect(page.getByTestId('card-Municipality')).toBeVisible();
 
     await page.keyboard.press('Escape');
     await expect(infobox).toHaveCount(0);
