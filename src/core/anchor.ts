@@ -53,7 +53,7 @@ function space(side: Side, anchor: Rect, bounds: Rect, offset: number, margin: n
 
 function cross(start: number, length: number, size: number, boundStart: number, boundLength: number, margin: number, align: Align): number {
     const ideal = align === 'start' ? start : align === 'end' ? start + length - size : start + length / 2 - size / 2;
-    return clamp(ideal, boundStart + margin, boundStart + boundLength - margin - size);
+    return clamp(Math.round(ideal), Math.ceil(boundStart + margin), Math.floor(boundStart + boundLength - margin - size));
 }
 
 function chooseSide(preferred: Side, need: number, room: (side: Side) => number): { side: Side; limit: number | null } {
