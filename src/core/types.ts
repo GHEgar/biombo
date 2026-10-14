@@ -8,7 +8,7 @@ export type CompactMode = 'sheet' | 'fullscreen' | 'inline';
 
 export type Presentation = 'hidden' | 'floating' | 'docked' | 'maximized' | CompactMode;
 
-export type SnapMode = 'auto' | 'button' | 'both';
+export type SnapMode = 'auto' | 'button';
 
 export type ResizeDirection = 'n' | 'e' | 's' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 

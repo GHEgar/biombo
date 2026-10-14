@@ -105,7 +105,7 @@ floating rects and docked sizes again.
 
 `getHandleProps` drags with `left/top` written in a `requestAnimationFrame` and saves on release; links,
 buttons, form fields and `[data-biombo-nodrag]` inside the handle do not start a drag. With `snap` set
-to `auto` or `both` a panel docks when the pointer reaches an edge it can dock to, and through `dock()`;
+to `auto` a panel docks when the pointer reaches an edge it can dock to, and through `dock()`;
 with `button`, only through `dock()`. `useSnapPreview` gives the rect to draw while dragging.
 `undockOnDrag` (`true` or a distance in px) lets a docked panel float again when dragged.
 `getResizerProps(direction)` resizes floating panels by side or corner and docked panels along their edge.
