@@ -18,20 +18,19 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 ### Cambiado
 
 - `useDismissGesture` publica `direction` también mientras se arrastra (signo del desplazamiento, `0` en
-  reposo), no solo al descartar. Solo re-renderiza cuando cambia de lado. Lo pide el letrero de las
-  tarjetas de mapalab, que va del lado que se descubre.
+  reposo), no solo al descartar. Solo re-renderiza cuando cambia de lado, para un letrero que va del
+  lado que se descubre.
 
 ## [0.6.1] - 2026-10-13
 
 ### Agregado
 
 - `placement: 'over'` en `placeAnchored` y `useAnchoredPosition`: la superficie se centra sobre el ancla
-  en los dos ejes y se acota a los límites. Tipo `Placement`. Lo pide el modo centrado del InfoBox de
-  mapalab.
+  en los dos ejes y se acota a los límites. Tipo `Placement`.
 
 ## [0.6.0] - 2026-10-13
 
-Superficies efímeras: lo que modales, tooltips e InfoBox resolvían a mano en las apps del IIEG.
+Superficies efímeras: modales, tooltips y cajas de información ancladas.
 
 ### Agregado
 
@@ -66,8 +65,6 @@ Superficies efímeras: lo que modales, tooltips e InfoBox resolvían a mano en l
 
 ## [0.5.0] - 2026-10-08
 
-Cambios que pidió la migración de mapalab.
-
 ### Agregado
 
 - `useEscape` funciona sin provider con una pila global, y `useOptionalManager` para adaptadores.
@@ -89,7 +86,7 @@ Cambios que pidió la migración de mapalab.
 
 ## [0.4.0] - 2026-10-08
 
-Primera versión empaquetada. No está en npm: mapalab la consume vendorizada mientras llega la 1.0.
+Primera versión empaquetada. Todavía no está en npm.
 
 ### Agregado
 
