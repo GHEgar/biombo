@@ -2,6 +2,17 @@
     "name": "biombo",
     "version": "0.6.3",
     "description": "Headless panel and window management for React: z-order, focus, Escape stack, docking, minimize and persistence.",
+    "keywords": [
+        "react",
+        "headless",
+        "panels",
+        "windows",
+        "window-manager",
+        "z-index",
+        "focus",
+        "docking",
+        "hooks"
+    ],
     "license": "AGPL-3.0-only",
     "author": "Edgar Villarreal",
     "type": "module",
