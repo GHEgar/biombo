@@ -44,32 +44,6 @@ function Map() {
 export const App = () => <BiomboProvider><Map /><Table /></BiomboProvider>;
 ```
 
-## Features
-
-| Feature | API |
-|---|---|
-| Z-order by named bands, focus on pointer down | `bands`, `getWindowProps` |
-| Escape closes only the topmost layer; global modes last | `useEscape`, `useGlobalMode` |
-| Groups where one panel is shown at a time | `groups: { name: { mode: 'single' } }` |
-| Drag, snap to edges, undock by dragging | `getHandleProps`, `snap`, `undockOnDrag`, `useSnapPreview` |
-| Dock to any edge with `replace`, `stack` or `tabs` policies | `dock`, `edges`, `useEdge` |
-| Usable area left for your content | `useArea`, `onAreaChange` |
-| Resize docked and floating panels | `getResizerProps(direction?)` |
-| Minimize and maximize | `minimize`, `maximize` |
-| Compact mode: sheets, fullscreen or inline below a breakpoint | `compactBreakpoint`, `compact`, `useCompact` |
-| Keep floating controls clear of panels and obstacles | `useClearance`, `useObstacle` |
-| Tabs with keyboard and drag reorder, controlled or not | `useTabs`, `onReorder` |
-| F6 cycles focus between panels | `cycleKey` |
-| Versioned persistence and external sync | `persist`, `serialize`, `hydrate`, `onEvent` |
-| Keep a floating panel fully on screen instead of partially | `contain: 'full'`, `containMargin` |
-| Focus trap with stacked traps, `inert` for the rest of the page and focus returned on close | `useFocusTrap` |
-| Body scroll lock that survives nested modals | `useScrollLock` |
-| Dismiss on a press outside, topmost surface only | `useDismissOutside` |
-| Tooltips and popovers anchored to an element or a point, flipping and clamped to the viewport; `over` centers on it | `useAnchoredPosition`, `placeAnchored` |
-| Render into `document.body`, SSR-safe | `Portal` |
-| Drag any element inside the viewport, alone or on top of an anchored surface | `useDraggable` |
-| Swipe to dismiss, driven by CSS variables instead of re-renders | `useDismissGesture` |
-
 ## Core
 
 ```ts
@@ -94,15 +68,7 @@ manager.setDockSize('layers', 320);
 
 Every panel lives in a named band; biombo orders panels inside each band and the band sets the base
 `z-index`. Opening or pressing a panel brings it to the front of its band and marks it `active`.
-
-| Band | Base |
-|---|---|
-| `overlay` | 5 |
-| `docked` | 20 |
-| `floating` | 30 |
-| `menu` | 50 |
-| `modal` | 60 |
-
+The default bands and their base: `overlay` 5, `docked` 20, `floating` 30, `menu` 50 and `modal` 60.
 Pass `bands` to replace them and `band` per panel to choose one. A group with `mode: 'single'` shows
 one panel at a time; `free` (the default) lets them overlap.
 
@@ -138,35 +104,30 @@ floating rects and docked sizes again.
 ### Drag, snap and resize
 
 `getHandleProps` drags with `left/top` written in a `requestAnimationFrame` and saves on release; links,
-buttons, form fields and `[data-biombo-nodrag]` inside the handle do not start a drag. `snap` decides
-how a panel docks:
-
-| Snap | Docks |
-|---|---|
-| `auto`, `both` | When the pointer reaches an edge it can dock to, and through `dock()` |
-| `button` | Only through `dock()`; dragging never docks |
-
-`useSnapPreview` gives the rect to draw while dragging. `undockOnDrag` (`true` or a distance in px) lets a
-docked panel float again when dragged. `getResizerProps(direction)` resizes floating panels by side or
-corner and docked panels along their edge.
+buttons, form fields and `[data-biombo-nodrag]` inside the handle do not start a drag. With `snap` set
+to `auto` or `both` a panel docks when the pointer reaches an edge it can dock to, and through `dock()`;
+with `button`, only through `dock()`. `useSnapPreview` gives the rect to draw while dragging.
+`undockOnDrag` (`true` or a distance in px) lets a docked panel float again when dragged.
+`getResizerProps(direction)` resizes floating panels by side or corner and docked panels along their edge.
 
 ### Presentation
 
 `state.presentation` says how to draw the panel: `hidden`, `floating`, `docked`, `maximized`, or the
 panel's `compact` mode (`sheet`, `fullscreen`, `inline`) below `compactBreakpoint`. Minimizing only
-keeps the state: draw the pill yourself from the panels that are `open` and `minimized`.
+keeps the state: draw the pill yourself from the panels that are `open` and `minimized`. `contain: 'full'`
+keeps a floating panel fully on screen instead of partially, `containMargin` px from the edges.
 
 ### Persistence and events
 
 `persist` saves `minimized`, `dock`, `dockSize` and `rect` by default (list `open` in `fields` to
-keep it too), under a `key` and a `version`; `migrate` upgrades older data. `serialize` and `hydrate` let you store the layout
-elsewhere. `onEvent` reports `open`, `close`, `focus`, `minimize`, `restore`, `maximize`, `unmaximize`,
+keep it too), under a `key` and a `version`; `migrate` upgrades older data. `serialize` and `hydrate`
+let you store the layout elsewhere. `onEvent` reports `open`, `close`, `focus`, `minimize`, `restore`, `maximize`, `unmaximize`,
 `dock`, `undock`, `resize`, `move` and `reorder`, each with `id` and `group`.
 
 ## React
 
 ```tsx
-import { BiomboProvider, usePanel, useArea, localStorageAdapter } from 'biombo/react';
+import { BiomboProvider, localStorageAdapter, usePanel } from 'biombo/react';
 
 function Table() {
     const panel = usePanel('table', { dockable: ['bottom'], defaultSize: { width: 520, height: 280 } });
@@ -181,23 +142,36 @@ function Table() {
     );
 }
 
-function Map() {
-    const area = useArea();
-    return <main style={{ position: 'fixed', inset: `${area.top}px ${area.right}px ${area.bottom}px ${area.left}px` }} />;
-}
+const options = { persist: { storage: localStorageAdapter(), key: 'app.panels', version: 1 } };
 
-<BiomboProvider options={{ persist: { storage: localStorageAdapter(), key: 'app.panels', version: 1 } }}>
-    <Map />
-    <Table />
-</BiomboProvider>
+export const App = () => <BiomboProvider options={options}><Table /></BiomboProvider>;
 ```
 
-`biombo` is the framework-free core; `biombo/react` adds the hooks. F6 (`cycleKey`) moves focus between
-open panels, and closing a panel returns focus to the element that opened it.
+| Hook | For |
+|---|---|
+| `usePanel` | State, actions and prop getters of one panel: `getWindowProps`, `getHandleProps`, `getResizerProps(direction?)` |
+| `useEdge`, `useTabs` | The panels of an edge and its tab strip, with keyboard and drag reorder (`onReorder`), controlled or not |
+| `useCompact` | Whether compact mode is on, below `compactBreakpoint` |
+| `useClearance`, `useObstacle` | Offset that keeps a floating control clear of panels and registered obstacles |
+
+F6 (`cycleKey`) moves focus between open panels, and closing a panel returns focus to the element that
+opened it.
 
 ### Surfaces
 
-These hooks work with or without `BiomboProvider`. A modal combines four of them:
+These hooks work with or without `BiomboProvider`:
+
+| Hook | Does |
+|---|---|
+| `useFocusTrap` | Focus trap with stacked traps, `inert` for the rest of the page and focus returned on close |
+| `useScrollLock` | Body scroll lock that survives nested modals |
+| `useDismissOutside` | Dismiss on a press outside, topmost surface only |
+| `useAnchoredPosition`, `placeAnchored` | Anchored to an element or a point, flipping and clamped to the viewport; `over` centers on it |
+| `useDraggable` | Drag any element inside the viewport, alone or on top of an anchored surface |
+| `useDismissGesture` | Swipe to dismiss, driven by CSS variables instead of re-renders |
+| `Portal` | Render into `document.body`, SSR-safe |
+
+A modal combines four of them:
 
 ```tsx
 import { ESCAPE_PRIORITY, Portal, useDismissOutside, useEscape, useFocusTrap, useScrollLock } from 'biombo/react';
