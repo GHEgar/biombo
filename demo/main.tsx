@@ -1,3 +1,4 @@
+import '@npmegar/rotulo';
 import { StrictMode, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BiomboProvider, localStorageAdapter, useArea, useGlobalMode, useSnapPreview, type Point } from 'biombo/react';
