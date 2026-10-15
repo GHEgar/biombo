@@ -1,4 +1,5 @@
 import { useRef, useSyncExternalStore } from 'react';
+import { ChevronUp } from 'tesela/react';
 import { useClearance, useManager, useObstacle } from 'biombo/react';
 
 export function Scale() {
@@ -19,7 +20,8 @@ export function PillBar({ titles }: { titles: Record<string, string> }) {
             {minimized.length === 0 && <span className="pillbar-empty">Nothing minimized</span>}
             {minimized.map((panel) => (
                 <button key={panel.id} type="button" className="pill" onClick={() => manager.open(panel.id)}>
-                    {`${titles[panel.id] ?? panel.id} ▴`}
+                    {titles[panel.id] ?? panel.id}
+                    <ChevronUp size={14} />
                 </button>
             ))}
         </div>

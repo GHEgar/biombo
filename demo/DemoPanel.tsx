@@ -1,3 +1,4 @@
+import { Close, Collapse, Expand, Minus } from 'tesela/react';
 import { usePanel, type Edge, type PanelConfig, type ResizeDirection } from 'biombo/react';
 import { TITLES } from './panels';
 import { TabStrip } from './TabStrip';
@@ -24,10 +25,12 @@ export function DemoPanel({ id, title, config }: { id: string; title: string; co
                     </button>
                 )}
                 {config.minimizable !== false && (
-                    <button type="button" onClick={() => panel.minimize()} aria-label={`Minimize ${title}`}>_</button>
+                    <button type="button" onClick={() => panel.minimize()} aria-label={`Minimize ${title}`}><Minus size={14} /></button>
                 )}
-                <button type="button" onClick={() => panel.maximize(!state.maximized)} aria-label={`Maximize ${title}`}>□</button>
-                <button type="button" onClick={() => panel.close()} aria-label={`Close ${title}`}>×</button>
+                <button type="button" onClick={() => panel.maximize(!state.maximized)} aria-label={`Maximize ${title}`}>
+                    {state.maximized ? <Collapse size={14} /> : <Expand size={14} />}
+                </button>
+                <button type="button" onClick={() => panel.close()} aria-label={`Close ${title}`}><Close size={14} /></button>
             </header>
             {state.presentation === 'docked' && state.dock && <TabStrip edge={state.dock} titles={TITLES} />}
             <div className="panel-body">

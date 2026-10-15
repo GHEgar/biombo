@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { Close } from 'tesela/react';
 import { ESCAPE_PRIORITY, Portal, useAnchoredPosition, useDismissGesture, useDraggable, useEscape, type Point } from 'biombo/react';
 
 const CARDS = ['Municipality', 'Neighborhood', 'Block'];
@@ -27,7 +28,7 @@ export function InfoBox({ point, onClose }: { point: Point; onClose: () => void 
             <div ref={ref} {...anchored.getFloatingProps()} className="infobox" data-testid="infobox">
                 <header {...drag.getHandleProps()} className="infobox-bar" data-testid="infobox-handle">
                     <span>{`Info · ${Math.round(point.x)}, ${Math.round(point.y)}`}</span>
-                    <button type="button" onClick={onClose} aria-label="Close">×</button>
+                    <button type="button" onClick={onClose} aria-label="Close"><Close size={14} /></button>
                 </header>
                 <div className="infobox-body">
                     {cards.map((label) => (

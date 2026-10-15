@@ -51,6 +51,12 @@ button {
     cursor: pointer;
 }
 
+button:has(> svg) {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
 button.on {
     background: #1a2664;
     color: #fff;
