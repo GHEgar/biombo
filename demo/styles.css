@@ -10,6 +10,13 @@ body {
     overflow: hidden;
 }
 
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
 .map {
     position: fixed;
     display: flex;
