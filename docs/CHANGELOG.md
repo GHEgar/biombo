@@ -17,6 +17,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 
 ### Corregido
 
+- `dock(id, null)` en un panel que nunca flotó lo dejaba sin `rect`, a todo lo ancho arriba; ahora se
+  centra en el área con su `defaultSize` o, sin él, con la mitad del viewport acotada por su tamaño
+  acoplado. Lo mismo vale para el panel que la política `replace` desacopla.
 - `placeAnchored` redondea la posición dentro de los márgenes: con un ancho fraccionario, el borde de
   un tooltip acotado podía salirse hasta medio píxel.
 

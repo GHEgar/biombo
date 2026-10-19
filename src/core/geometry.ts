@@ -50,17 +50,38 @@ function clampSize(store: Store, record: PanelRecord, size: number): number {
     );
 }
 
+function centered(store: Store, record: PanelRecord, size: Size): Rect {
+    const floating = [...store.records.values()]
+        .filter((other) => other !== record && other.state.open && !other.state.dock && !other.state.minimized).length;
+    return fitRect(store, record, centerRect(size, store.snapshot.area, store.viewport, floating, store.options.cascade ?? 26));
+}
+
+function undockedSize(store: Store, record: PanelRecord, layout: Rect | null | undefined): Size {
+    const width = store.viewport.width / 2;
+    const height = store.viewport.height / 2;
+    return record.config.defaultSize ?? {
+        width: Math.round(Math.min(layout?.width ?? width, width)),
+        height: Math.round(Math.min(layout?.height ?? height, height)),
+    };
+}
+
 export function placeOnOpen(store: Store, record: PanelRecord): void {
     const size = record.config.defaultSize;
     if (record.state.dock || record.state.rect || !size || !hasSize(store.viewport)) {
         return;
     }
-    const floating = [...store.records.values()]
-        .filter((other) => other !== record && other.state.open && !other.state.dock && !other.state.minimized).length;
-    record.state = {
-        ...record.state,
-        rect: fitRect(store, record, centerRect(size, store.snapshot.area, store.viewport, floating, store.options.cascade ?? 26)),
-    };
+    record.state = { ...record.state, rect: centered(store, record, size) };
+}
+
+function placeUndocked(store: Store, released: Map<PanelRecord, Rect | null | undefined>): void {
+    const pending = [...released].filter(([record]) => !record.state.dock && !record.state.rect);
+    if (pending.length === 0 || !hasSize(store.viewport)) {
+        return;
+    }
+    store.refresh();
+    for (const [record, layout] of pending) {
+        record.state = { ...record.state, rect: centered(store, record, undockedSize(store, record, layout)) };
+    }
 }
 
 export function createGeometryActions(store: Store): GeometryActions {
@@ -74,17 +95,23 @@ export function createGeometryActions(store: Store): GeometryActions {
             return;
         }
         const events: PanelEvent[] = [];
+        const released = new Map<PanelRecord, Rect | null | undefined>();
         if (edge && store.edgePolicy(edge) === 'replace') {
             for (const [otherId, other] of store.records) {
                 if (otherId !== id && other.state.dock === edge) {
+                    released.set(other, store.snapshot.panels[otherId]?.layout);
                     other.state = { ...other.state, dock: null };
                     events.push(store.event(other, otherId, 'undock', { dock: null }));
                 }
             }
         }
+        if (!edge) {
+            released.set(record, store.snapshot.panels[id]?.layout);
+        }
         store.seq += 1;
         record.dockSeq = store.seq;
         store.update(id, { dock: edge, maximized: false });
+        placeUndocked(store, released);
         if (record.state.open) {
             store.bringToFront(id, record);
         }
@@ -170,12 +197,7 @@ export function createGeometryActions(store: Store): GeometryActions {
             return null;
         }
         const previous = record.state.rect;
-        const size = previous
-            ? { width: previous.width, height: previous.height }
-            : record.config.defaultSize ?? {
-                width: Math.min(layout.width, store.viewport.width / 2),
-                height: Math.min(layout.height, store.viewport.height / 2),
-            };
+        const size = previous ? { width: previous.width, height: previous.height } : undockedSize(store, record, layout);
         const rect = fitRect(store, record, {
             x: point.x - size.width * grab.x,
             y: point.y - Math.min(grab.y, size.height),

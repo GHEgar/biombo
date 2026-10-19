@@ -49,6 +49,7 @@ export interface Store {
     edgePolicy: (edge: Edge) => DockPolicy;
     isVisible: (id: string) => boolean;
     commit: (events?: PanelEvent[], options?: UpdateOptions) => void;
+    refresh: () => void;
     event: (record: PanelRecord, id: string, type: PanelEvent['type'], extra?: Partial<PanelEvent>) => PanelEvent;
     update: (id: string, patch: Partial<PersistedPanel>) => PanelRecord | null;
     bringToFront: (id: string, record: PanelRecord) => boolean;
@@ -93,6 +94,9 @@ export function createStore(options: ManagerOptions): Store {
                 notifiedArea = store.snapshot.area;
                 options.onAreaChange?.(notifiedArea);
             }
+        },
+        refresh: () => {
+            store.snapshot = build(store);
         },
         event: (record, id, type, extra = {}) => ({ type, id, group: record.group, ...extra }),
         update: (id, patch) => {

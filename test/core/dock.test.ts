@@ -130,6 +130,35 @@ describe('docking', () => {
         expect(manager.getPanel('a')).toMatchObject({ dock: null, layout: rect });
     });
 
+    it('centers a panel that never floated with its defaultSize when undocked', () => {
+        const manager = setup();
+        manager.register('t', { dockable: ['bottom'], defaultSize: { width: 520, height: 280 } });
+        manager.dock('t', 'bottom');
+        manager.open('t');
+        expect(manager.getPanel('t')?.rect).toBeNull();
+        manager.dock('t', null);
+        expect(manager.getSnapshot().area.bottom).toBe(0);
+        expect(manager.getPanel('t')).toMatchObject({ presentation: 'floating', rect: { x: 240, y: 260, width: 520, height: 280 } });
+    });
+
+    it('falls back to half the viewport capped by the docked size when there is no defaultSize', () => {
+        const manager = setup();
+        manager.register('t', { dockable: ['bottom'] });
+        manager.open('t');
+        manager.dock('t', 'bottom');
+        manager.dock('t', null);
+        expect(manager.getPanel('t')?.rect).toEqual({ x: 250, y: 240, width: 500, height: 320 });
+    });
+
+    it('keeps the previous rect when undocking a panel that already floated', () => {
+        const manager = setup();
+        manager.register('t', { initial: { rect: { x: 10, y: 20, width: 300, height: 200 } } });
+        manager.open('t');
+        manager.dock('t', 'left');
+        manager.dock('t', null);
+        expect(manager.getPanel('t')?.rect).toEqual({ x: 10, y: 20, width: 300, height: 200 });
+    });
+
     it('keeps untouched panel objects between commits', () => {
         const manager = setup();
         manager.register('a');

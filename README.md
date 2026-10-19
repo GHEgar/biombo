@@ -99,7 +99,9 @@ A panel docks to the edges listed in `dockable`. Each edge has a policy for a se
 Docked sizes start at 40 % of the viewport, never below 120 px nor above 80 %
 (`defaultDockRatio`, `minDockSize`, `maxDockRatio`). The snapshot keeps the usable `area` left by the
 docked panels; `useArea` reads it and `onAreaChange` reports it. When the browser resizes, biombo clamps
-floating rects and docked sizes again.
+floating rects and docked sizes again. `dock(id, null)` floats the panel back at its last rect; if it
+never floated, it is centered in the area with its `defaultSize`, or with half the viewport capped by
+its docked size.
 
 ### Drag, snap and resize
 
