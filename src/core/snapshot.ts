@@ -1,6 +1,8 @@
 import { areaRect, axisLength, DOCK_DEFAULTS, EDGES, layoutDocks, resolveDockSize, sameArea, sameRect, ZERO_AREA, type DockItem } from './layout.js';
 import type {
+    AnchoredRect,
     Area,
+    Corner,
     DockPolicy,
     Edge,
     EdgeState,
@@ -26,6 +28,8 @@ export interface PanelRecord {
     trigger: Focusable | null;
     releaseEscape: (() => void) | null;
     dockSeq: number;
+    anchor: AnchoredRect | null;
+    corner: Corner | null;
 }
 
 export interface SnapshotInput {

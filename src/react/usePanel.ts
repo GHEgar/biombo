@@ -1,6 +1,7 @@
-import { useCallback, useMemo, useRef, useSyncExternalStore, type CSSProperties, type PointerEvent, type RefCallback } from 'react';
+import { useCallback, useMemo, useRef, useSyncExternalStore, type CSSProperties, type MouseEvent, type PointerEvent, type RefCallback } from 'react';
 import { DEFAULT_GROUP } from '../core/manager.js';
-import type { Edge, Focusable, PanelConfig, PanelState, Rect, ResizeDirection, UpdateOptions } from '../core/types.js';
+import { isAnchoredRect } from '../core/corner.js';
+import type { Edge, FitHeightOptions, Focusable, PanelConfig, PanelState, Rect, ResizeDirection, UpdateOptions } from '../core/types.js';
 import { useIsomorphicLayoutEffect, useManager } from './context.js';
 import { startDrag, startResize, type InteractionContext } from './interactions.js';
 
@@ -40,6 +41,17 @@ export interface ResizerProps {
     onPointerDown: (event: PointerEvent<HTMLElement>) => void;
 }
 
+export interface RestoreProps {
+    type: 'button';
+    'data-biombo-restore': string;
+    hidden?: true;
+    onClick: (event: MouseEvent<HTMLElement>) => void;
+}
+
+export interface RestorePropsInput {
+    onClick?: (event: MouseEvent<HTMLElement>) => void;
+}
+
 export interface PanelActions {
     open: (trigger?: Focusable | null) => void;
     close: () => void;
@@ -50,6 +62,7 @@ export interface PanelActions {
     dock: (edge: Edge | null) => void;
     setDockSize: (size: number | null, options?: UpdateOptions) => void;
     setRect: (rect: Rect | null, options?: UpdateOptions) => void;
+    fitHeight: (height: number, options?: FitHeightOptions) => void;
 }
 
 export interface UsePanelResult extends PanelActions {
@@ -57,6 +70,7 @@ export interface UsePanelResult extends PanelActions {
     getWindowProps: (input?: WindowPropsInput) => WindowProps;
     getHandleProps: () => HandleProps;
     getResizerProps: (direction?: ResizeDirection) => ResizerProps;
+    getRestoreProps: (input?: RestorePropsInput) => RestoreProps;
 }
 
 const TOUCH_NONE: CSSProperties = { touchAction: 'none' };
@@ -79,8 +93,8 @@ function fallbackState(id: string, config: PanelConfig): PanelState {
         maximized: false,
         dock: null,
         dockSize: null,
-        rect: null,
         ...config.initial,
+        rect: isAnchoredRect(config.initial?.rect) ? null : config.initial?.rect ?? null,
         visible: false,
         active: false,
         topmost: false,
@@ -137,6 +151,7 @@ export function usePanel(id: string, config: PanelConfig = {}): UsePanelResult {
         dock: (edge) => manager.dock(id, edge),
         setDockSize: (size, options) => manager.setDockSize(id, size, options),
         setRect: (rect, options) => manager.setRect(id, rect, options),
+        fitHeight: (height, options) => manager.fitHeight(id, height, options),
     }), [manager, id]);
 
     const getWindowProps = useCallback((input: WindowPropsInput = {}): WindowProps => {
@@ -192,5 +207,23 @@ export function usePanel(id: string, config: PanelConfig = {}): UsePanelResult {
         return props;
     }, [context, state]);
 
-    return { state, getWindowProps, getHandleProps, getResizerProps, ...actions };
+    const minimized = state.open && state.minimized;
+    const getRestoreProps = useCallback((input: RestorePropsInput = {}): RestoreProps => {
+        const props: RestoreProps = {
+            type: 'button',
+            'data-biombo-restore': id,
+            onClick: (event) => {
+                input.onClick?.(event);
+                if (!event.defaultPrevented) {
+                    manager.minimize(id, false);
+                }
+            },
+        };
+        if (!minimized) {
+            props.hidden = true;
+        }
+        return props;
+    }, [manager, id, minimized]);
+
+    return { state, getWindowProps, getHandleProps, getResizerProps, getRestoreProps, ...actions };
 }

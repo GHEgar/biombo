@@ -5,6 +5,7 @@ export { DEFAULT_KEEP_VISIBLE } from './store.js';
 export { clearance, isCovered, type ClearanceOptions } from './clearance.js';
 export { ANCHOR_DEFAULTS, isOutside, placeAnchored, type Align, type AnchoredPlacement, type AnchorOptions, type Placement, type Side } from './anchor.js';
 export { DEFAULT_CONTAIN_MARGIN } from './geometry.js';
+export { anchorRect, isAnchoredRect } from './corner.js';
 export {
     areaRect,
     centerRect,
@@ -20,17 +21,22 @@ export {
     type ContainedRect,
 } from './layout.js';
 export type {
+    AnchoredRect,
     Area,
     CompactMode,
     ContainMode,
+    Corner,
     DockPolicy,
     Edge,
     EdgeConfig,
     EdgeState,
+    FitHeightOptions,
     Focusable,
     GroupConfig,
     GroupMode,
     GroupState,
+    GrowDirection,
+    InitialPanel,
     Interaction,
     ManagerOptions,
     PanelConfig,

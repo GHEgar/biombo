@@ -4,10 +4,13 @@ export {
     type HandleProps,
     type PanelActions,
     type ResizerProps,
+    type RestoreProps,
+    type RestorePropsInput,
     type UsePanelResult,
     type WindowProps,
     type WindowPropsInput,
 } from './usePanel.js';
+export { neededHeight, useAutoHeight, type UseAutoHeightOptions } from './useAutoHeight.js';
 export { useArea, useCompact, useEdge, useInteraction, useSnapPreview, useViewport } from './useLayout.js';
 export { useClearance, useCovered, useObstacle, type UseClearanceOptions, type UseCoveredOptions, type UseObstacleOptions } from './useClearance.js';
 export { moveId, useTabs, type TabListProps, type TabProps, type TabScope, type UseTabsOptions, type UseTabsResult } from './useTabs.js';

@@ -112,11 +112,31 @@ with `button`, only through `dock()`. `useSnapPreview` gives the rect to draw wh
 `undockOnDrag` (`true` or a distance in px) lets a docked panel float again when dragged.
 `getResizerProps(direction)` resizes floating panels by side or corner and docked panels along their edge.
 
+### Initial position and height
+
+```ts
+manager.register('legend', {
+    initial: { open: true, rect: { anchor: 'bottom-right', x: 16, y: 16, width: 260, height: 200 } },
+});
+manager.fitHeight('legend', contentHeight, { maxRatio: 0.6 });
+```
+
+`initial.rect` takes a plain rect or one anchored to a corner (`top-left`, `top-right`, `bottom-left`,
+`bottom-right`): `x` and `y` (0 by default) are the distances from that corner's edges of the usable
+area. It is resolved once, when the panel opens with a known viewport; a stored `rect` wins, and after
+that it is a plain rect that the user moves.
+
+`fitHeight(id, height, options)` sets a floating panel's height, clamped between `min` (and the panel's
+`minSize`) and the lowest of `max` px and `maxRatio` of the viewport height. It keeps the top edge, or
+the bottom one when the panel was anchored to a bottom corner (`grow: 'down' | 'up'` overrides it),
+reports `resize`, and does nothing on docked or maximized panels or when nothing changes.
+
 ### Presentation
 
 `state.presentation` says how to draw the panel: `hidden`, `floating`, `docked`, `maximized`, or the
 panel's `compact` mode (`sheet`, `fullscreen`, `inline`) below `compactBreakpoint`. Minimizing only
-keeps the state: draw the pill yourself from the panels that are `open` and `minimized`. `contain: 'full'`
+keeps the state: draw the pill yourself from the panels that are `open` and `minimized` (in React,
+`getRestoreProps` gives its button). `contain: 'full'`
 keeps a floating panel fully on screen instead of partially, `containMargin` px from the edges.
 
 ### Persistence and events
@@ -151,10 +171,33 @@ export const App = () => <BiomboProvider options={options}><Table /></BiomboProv
 
 | Hook | For |
 |---|---|
-| `usePanel` | State, actions and prop getters of one panel: `getWindowProps`, `getHandleProps`, `getResizerProps(direction?)` |
+| `usePanel` | State, actions and prop getters of one panel: `getWindowProps`, `getHandleProps`, `getResizerProps(direction?)`, `getRestoreProps` |
+| `useAutoHeight` | Ref for the scrolling body of a panel whose height follows its content |
 | `useEdge`, `useTabs` | The panels of an edge and its tab strip, with keyboard and drag reorder (`onReorder`), controlled or not |
 | `useCompact` | Whether compact mode is on, below `compactBreakpoint` |
 | `useClearance`, `useObstacle` | Offset that keeps a floating control clear of panels and registered obstacles |
+
+```tsx
+function Legend() {
+    const panel = usePanel('legend', { minimizable: true, initial: { open: true, rect: { anchor: 'bottom-right', x: 16, y: 16, width: 260, height: 200 } } });
+    const body = useAutoHeight('legend', { maxRatio: 0.6 });
+    return (
+        <>
+            <section {...panel.getWindowProps()}>
+                <header {...panel.getHandleProps()}>Legend</header>
+                <div ref={body} style={{ overflow: 'auto' }}>…</div>
+            </section>
+            <button {...panel.getRestoreProps()}>Legend</button>
+        </>
+    );
+}
+```
+
+`useAutoHeight(id, options)` measures the window's chrome plus the natural height of the body's
+children (in-flow only, with margins, padding and `gap`) and calls `fitHeight` when the body, its
+children or the list of children change, and after a drag or resize by hand ends. `enabled: false`
+stops it; `neededHeight(body)` is the same measure for your own code. `getRestoreProps(input?)` is a
+button that restores the minimized panel and is `hidden` otherwise, so it can stay mounted.
 
 F6 (`cycleKey`) moves focus between open panels, and closing a panel returns focus to the element that
 opened it.

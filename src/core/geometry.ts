@@ -1,12 +1,14 @@
+import { anchorRect, fitHeightTarget, growRect } from './corner.js';
 import { axisLength, centerRect, clampDockSize, clampRect, containRect, DOCK_DEFAULTS, dockPreviewRect, resolveDockSize, sameRect, snapEdge } from './layout.js';
 import type { PanelRecord } from './snapshot.js';
 import type { Store } from './store.js';
-import type { Edge, Interaction, PanelEvent, Rect, Size, SnapPreview, UpdateOptions } from './types.js';
+import type { Edge, FitHeightOptions, Interaction, PanelEvent, Rect, Size, SnapPreview, UpdateOptions } from './types.js';
 
 export interface GeometryActions {
     dock: (id: string, edge: Edge | null) => void;
     setDockSize: (id: string, size: number | null, options?: UpdateOptions) => void;
     setRect: (id: string, rect: Rect | null, options?: UpdateOptions) => void;
+    fitHeight: (id: string, height: number, options?: FitHeightOptions) => void;
     setViewport: (size: Size) => void;
     setSnap: (preview: SnapPreview | null) => void;
     clampRect: (rect: Rect, id?: string) => Rect;
@@ -67,7 +69,15 @@ function undockedSize(store: Store, record: PanelRecord, layout: Rect | null | u
 
 export function placeOnOpen(store: Store, record: PanelRecord): void {
     const size = record.config.defaultSize;
-    if (record.state.dock || record.state.rect || !size || !hasSize(store.viewport)) {
+    if (record.state.dock || record.state.rect || !hasSize(store.viewport)) {
+        return;
+    }
+    if (record.anchor) {
+        record.state = { ...record.state, rect: fitRect(store, record, anchorRect(record.anchor, store.snapshot.area, store.viewport)) };
+        record.anchor = null;
+        return;
+    }
+    if (!size) {
         return;
     }
     record.state = { ...record.state, rect: centered(store, record, size) };
@@ -141,6 +151,24 @@ export function createGeometryActions(store: Store): GeometryActions {
         const next = rect ? fitRect(store, record, rect) : rect;
         store.update(id, { rect: next });
         store.commit([store.event(record, id, 'move', { rect: next })], options);
+    };
+
+    const fitHeight = (id: string, height: number, options: FitHeightOptions = {}): void => {
+        const record = store.records.get(id);
+        const rect = record?.state.rect;
+        if (!record || !rect || record.state.dock || record.state.maximized || !Number.isFinite(height)) {
+            return;
+        }
+        const ratio = options.maxRatio !== undefined && hasSize(store.viewport) ? store.viewport.height * options.maxRatio : Infinity;
+        const min = Math.max(options.min ?? 0, record.config.minSize?.height ?? 0);
+        const target = fitHeightTarget(height, min, Math.max(min, Math.min(options.max ?? Infinity, ratio)));
+        const grow = options.grow ?? (record.corner?.startsWith('bottom') ? 'up' : 'down');
+        const next = fitRect(store, record, growRect(rect, target, grow));
+        if (sameRect(next, rect)) {
+            return;
+        }
+        store.update(id, { rect: next });
+        store.commit([store.event(record, id, 'resize', { rect: next })], options);
     };
 
     const setViewport = (size: Size): void => {
@@ -237,6 +265,7 @@ export function createGeometryActions(store: Store): GeometryActions {
         dock,
         setDockSize,
         setRect,
+        fitHeight,
         setViewport,
         setSnap,
         clampRect: (rect, id) => fitRect(store, id === undefined ? undefined : store.records.get(id), rect),

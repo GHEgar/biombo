@@ -31,6 +31,29 @@ export interface Rect {
     height: number;
 }
 
+export type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
+export interface AnchoredRect {
+    anchor: Corner;
+    x?: number;
+    y?: number;
+    width: number;
+    height: number;
+}
+
+export interface InitialPanel extends Partial<Omit<PersistedPanel, 'rect'>> {
+    rect?: Rect | AnchoredRect | null;
+}
+
+export type GrowDirection = 'down' | 'up';
+
+export interface FitHeightOptions extends UpdateOptions {
+    min?: number;
+    max?: number;
+    maxRatio?: number;
+    grow?: GrowDirection;
+}
+
 export interface Focusable {
     focus: () => void;
 }
@@ -46,7 +69,7 @@ export interface PanelConfig {
     minimizable?: boolean;
     compact?: CompactMode;
     persist?: boolean;
-    initial?: Partial<PersistedPanel>;
+    initial?: InitialPanel;
     defaultSize?: Size;
     minSize?: Size;
     minDockSize?: number;

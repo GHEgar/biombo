@@ -3,15 +3,29 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y versionado con
 [SemVer](https://semver.org/lang/es/).
 
-## [No publicado]
+## [0.7.0] - 2026-10-19
 
 ### Agregado
 
+- `initial.rect` acepta un rect anclado a una esquina (`{ anchor, x?, y?, width, height }`, con `anchor`
+  `top-left`, `top-right`, `bottom-left` o `bottom-right`): `x` e `y` son la distancia a los bordes de
+  esa esquina del área útil y se resuelve al abrir con viewport conocido. Tipos `AnchoredRect`,
+  `Corner` e `InitialPanel`; `anchorRect` e `isAnchoredRect`.
+- `fitHeight(id, height, options)` en el manager y `fitHeight(height, options)` en `usePanel`: ajusta el
+  alto de un panel flotante entre `min` (y `minSize`) y el menor de `max` y `maxRatio` del viewport;
+  crece hacia abajo, o hacia arriba si se ancló a una esquina inferior (`grow` lo cambia). Tipos
+  `FitHeightOptions` y `GrowDirection`.
+- `useAutoHeight(id, options)`: ref para el cuerpo de un panel cuyo alto sigue al contenido, con
+  `ResizeObserver` y `MutationObserver`, en pausa mientras se arrastra o redimensiona a mano.
+  `neededHeight(cuerpo)` y el tipo `UseAutoHeightOptions`.
+- `getRestoreProps(input?)` en `usePanel`: botón que restaura el panel minimizado y queda `hidden` si
+  no lo está. Tipos `RestoreProps` y `RestorePropsInput`.
 - `release.yml`: un tag `vX.Y.Z` corre las pruebas, crea el release con su sección del CHANGELOG y
   publica en npm con procedencia y en GitHub Packages.
 
 ### Cambiado
 
+- `PanelConfig.initial` pasa de `Partial<PersistedPanel>` a `InitialPanel`, cuyo `rect` puede ir anclado.
 - El demo está en inglés.
 - El demo usa los íconos de tesela.
 

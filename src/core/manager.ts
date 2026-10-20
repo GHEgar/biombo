@@ -1,4 +1,5 @@
 import { ESCAPE_PRIORITY, type EscapeStack } from './escape.js';
+import { isAnchoredRect } from './corner.js';
 import { createGeometryActions, placeOnOpen, type GeometryActions } from './geometry.js';
 import { createOrderActions, type OrderActions } from './order.js';
 import type { PanelRecord } from './snapshot.js';
@@ -42,14 +43,25 @@ export function createManager(options: ManagerOptions = {}): Manager {
         const previous = records.get(id);
         previous?.releaseEscape?.();
         const persisted = config.persist === false ? {} : store.stored[id] ?? {};
+        const { rect: initialRect, ...initial } = config.initial ?? {};
+        const anchored = isAnchoredRect(initialRect) ? initialRect : null;
+        const plainRect = isAnchoredRect(initialRect) ? null : initialRect ?? null;
+        const state = previous?.state ?? {
+            ...CLOSED,
+            ...initial,
+            ...(plainRect ? { rect: plainRect } : {}),
+            ...persisted,
+        };
         const record: PanelRecord = {
             config,
             group: config.group ?? DEFAULT_GROUP,
             band: config.band ?? options.defaultBand ?? 'floating',
-            state: previous?.state ?? { ...CLOSED, ...config.initial, ...persisted },
+            state,
             trigger: previous?.trigger ?? null,
             releaseEscape: null,
             dockSeq: previous?.dockSeq ?? (store.seq += 1),
+            anchor: anchored && !state.rect ? anchored : null,
+            corner: anchored?.anchor ?? previous?.corner ?? null,
         };
         if (config.closeOnEscape !== false) {
             record.releaseEscape = store.escape.push({
